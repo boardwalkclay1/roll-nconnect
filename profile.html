@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Your Profile — Roll ’n Connect</title>
+  <link rel="stylesheet" href="rc_global.css">
+</head>
+<body>
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="glass" style="max-width:900px;margin:80px auto;">
+    <h1 class="section-title">Your Profile</h1>
+
+    <div id="profileView">
+      <!-- Filled by JS -->
+    </div>
+
+    <div style="margin-top:30px;">
+      <a href="profile-edit.html" class="btn-primary">Edit Profile</a>
+    </div>
+
+    <hr style="margin:40px 0;border-color:rgba(255,255,255,0.2);">
+
+    <h2 class="section-title" style="font-size:2rem;">Your Calendar</h2>
+    <div id="miniCalendar">
+      <!-- Mini calendar preview -->
+    </div>
+
+    <div style="margin-top:20px;">
+      <a href="calendar.html" class="btn-primary">Open Full Calendar</a>
+    </div>
+  </div>
+
+  <script src="rc_core.js"></script>
+  <script>
+    function renderProfile() {
+      const profile = RC.getProfile();
+      const container = document.getElementById("profileView");
+
+      const name = profile.name || "Unnamed Skater";
+      const city = profile.city || "No city set";
+      const discipline = profile.discipline || "No discipline set";
+      const bio = profile.bio || "No bio yet.";
+      const avatar = profile.avatarDataUrl || "";
+
+      container.innerHTML = `
+        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+          <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.15);box-shadow:0 0 25px rgba(255,255,255,0.4);">
+            ${avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">` : ""}
+          </div>
+          <div>
+            <div style="font-size:1.8rem;font-weight:600;margin-bottom:6px;">${name}</div>
+            <div style="opacity:0.8;margin-bottom:4px;">${city}</div>
+            <div style="opacity:0.8;margin-bottom:4px;">Discipline: ${discipline}</div>
+            <div style="opacity:0.9;margin-top:10px;max-width:500px;">${bio}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMiniCalendar() {
+      const events = RC.getCalendar();
+      const container = document.getElementById("miniCalendar");
+
+      if (!events.length) {
+        container.innerHTML = `<div style="opacity:0.8;">No events yet. Add some in your calendar.</div>`;
+        return;
+      }
+
+      const upcoming = events
+        .slice()
+        .sort((a,b)=> new Date(a.date) - new Date(b.date))
+        .slice(0,5);
+
+      container.innerHTML = upcoming.map(ev => `
+        <div class="card" style="margin-bottom:10px;padding:14px;">
+          <div style="font-weight:600;">${ev.title || "Untitled Event"}</div>
+          <div style="opacity:0.8;">${ev.date} • ${ev.time || ""}</div>
+          <div style="opacity:0.8;">${ev.location || ""}</div>
+        </div>
+      `).join("");
+    }
+
+    renderProfile();
+    renderMiniCalendar();
+  </script>
+</body>
+</html>
