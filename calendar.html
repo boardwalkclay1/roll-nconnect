@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Calendar — Roll ’n Connect</title>
+  <link rel="stylesheet" href="rc_global.css">
+</head>
+<body>
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="glass" style="max-width:1000px;margin:80px auto;">
+    <h1 class="section-title">Your Calendar</h1>
+
+    <form id="eventForm" style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:30px;">
+      <div style="flex:1 1 180px;">
+        <label>Date</label><br>
+        <input type="date" id="dateInput" style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      </div>
+      <div style="flex:1 1 180px;">
+        <label>Time</label><br>
+        <input type="time" id="timeInput" style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      </div>
+      <div style="flex:2 1 220px;">
+        <label>Title</label><br>
+        <input type="text" id="titleInput" placeholder="Night skate, practice, meetup..." style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      </div>
+      <div style="flex:2 1 220px;">
+        <label>Location</label><br>
+        <input type="text" id="locationInput" placeholder="Boardwalk, rink, city..." style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      </div>
+      <div style="flex:1 1 160px;display:flex;align-items:flex-end;">
+        <button type="submit" class="btn-primary" style="width:100%;">Add Event</button>
+      </div>
+    </form>
+
+    <div id="eventsList">
+      <!-- Events render here -->
+    </div>
+  </div>
+
+  <script src="rc_core.js"></script>
+  <script>
+    const form = document.getElementById("eventForm");
+    const dateInput = document.getElementById("dateInput");
+    const timeInput = document.getElementById("timeInput");
+    const titleInput = document.getElementById("titleInput");
+    const locationInput = document.getElementById("locationInput");
+    const eventsList = document.getElementById("eventsList");
+
+    let events = RC.getCalendar();
+
+    function renderEvents() {
+      if (!events.length) {
+        eventsList.innerHTML = `<div style="opacity:0.8;">No events yet. Add your first one above.</div>`;
+        return;
+      }
+
+      const sorted = events.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+
+      eventsList.innerHTML = sorted.map(ev => `
+        <div class="event-card" style="margin-bottom:12px;">
+          <div style="font-weight:600;font-size:1.1rem;">${ev.title || "Untitled Event"}</div>
+          <div style="opacity:0.85;margin-top:4px;">${ev.date} • ${ev.time || ""}</div>
+          <div style="opacity:0.8;margin-top:4px;">${ev.location || ""}</div>
+          <button data-id="${ev.id}" class="btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.9rem;">Remove</button>
+        </div>
+      `).join("");
+
+      // Attach remove handlers
+      Array.from(eventsList.querySelectorAll("button[data-id]")).forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          events = events.filter(e => e.id !== id);
+          RC.saveCalendar(events);
+          renderEvents();
+        });
+      });
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const date = dateInput.value;
+      const time = timeInput.value;
+      const title = titleInput.value.trim();
+      const location = locationInput.value.trim();
+
+      if (!date) return;
+
+      events.push({
+        id: RC.uuid(),
+        date,
+        time,
+        title,
+        location
+      });
+
+      RC.saveCalendar(events);
+      renderEvents();
+
+      titleInput.value = "";
+      locationInput.value = "";
+    });
+
+    renderEvents();
+  </script>
+</body>
+</html>
