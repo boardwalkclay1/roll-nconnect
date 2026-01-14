@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatrooms — Roll ’n Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="rc_style.css">
+  <style>
+    .chat-layout {
+      display:grid;
+      grid-template-columns:260px minmax(0,1fr);
+      gap:24px;
+    }
+    @media(max-width:900px){
+      .chat-layout{grid-template-columns:1fr;}
+    }
+    .chat-room-list {
+      max-height:600px;
+      overflow-y:auto;
+    }
+    .chat-room-item {
+      padding:10px 12px;
+      border-radius:12px;
+      margin-bottom:8px;
+      background:rgba(255,255,255,0.06);
+      cursor:pointer;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .chat-room-item.active {
+      background:rgba(79,195,255,0.18);
+      box-shadow:0 0 18px rgba(79,195,255,0.7);
+    }
+    .chat-main {
+      display:flex;
+      flex-direction:column;
+      height:600px;
+    }
+    .chat-messages {
+      flex:1;
+      overflow-y:auto;
+      padding:12px;
+      border-radius:16px;
+      background:rgba(0,0,0,0.6);
+      margin-bottom:12px;
+    }
+    .chat-message {
+      margin-bottom:10px;
+      padding:8px 10px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.08);
+      max-width:80%;
+    }
+    .chat-message.me {
+      margin-left:auto;
+      background:rgba(79,195,255,0.18);
+    }
+    .chat-input-row {
+      display:flex;
+      gap:8px;
+    }
+    .chat-input-row input {
+      flex:1;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="rc-loading-overlay" id="loadingScreen">
+    <div class="rc-loading-track">
+      <div class="rc-longboard"></div>
+      <div class="rc-rollerskate"></div>
+    </div>
+    <div class="rc-loading-text">Connecting to chat…</div>
+  </div>
+
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="events.html">Events</a>
+    <a href="find-spots.html">Find Spots</a>
+    <a href="chatrooms.html">Chatrooms</a>
+    <a href="profile.html">Your Profile</a>
+    <a href="profile-edit.html">Edit Profile</a>
+  </div>
+
+  <div class="wrapper">
+    <div class="glass" style="padding:32px;margin-bottom:24px;">
+      <h1 class="section-title">Chatrooms</h1>
+      <p style="opacity:0.8;">Built to hold a lot of skaters. Rooms, presence, and real‑time sessions—Render‑ready.</p>
+    </div>
+
+    <div class="chat-layout">
+      <!-- ROOMS -->
+      <div class="glass">
+        <div class="flex-between" style="margin-bottom:10px;">
+          <h2 class="section-title" style="font-size:1.4rem;">Rooms</h2>
+          <button class="btn-primary" id="newRoomBtn">+ New Room</button>
+        </div>
+        <div id="roomList" class="chat-room-list"></div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="glass chat-main">
+        <div class="flex-between" style="margin-bottom:8px;">
+          <div id="activeRoomName" class="section-title" style="font-size:1.4rem;">Select a room</div>
+          <div id="roomPresence" style="opacity:0.7;font-size:0.85rem;">0 online</div>
+        </div>
+
+        <div id="messages" class="chat-messages"></div>
+
+        <div class="chat-input-row">
+          <input id="messageInput" class="glass-input" placeholder="Type a message…" disabled>
+          <button class="btn-primary" id="sendBtn" disabled>Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="rc_core.js"></script>
+
+  <script>
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const ls = document.getElementById("loadingScreen");
+        ls.style.opacity = "0";
+        setTimeout(() => ls.remove(), 600);
+      }, 600);
+    });
+
+    document.getElementById("hamburger").onclick = () => {
+      document.getElementById("hamburger").classList.toggle("active");
+      document.getElementById("sidebar").classList.toggle("open");
+    };
+
+    const user = RC.getProfile();
+    const userId = RC.getUserId();
+    const username = user.username || ("skater_" + userId.slice(-4));
+
+    const chatState = {
+      rooms: [],      // { id, name, createdAt }
+      messages: {},   // roomId -> [ { id, userId, username, text, ts } ]
+      activeRoomId: null
+    };
+
+    function loadChatState() {
+      const data = RC.getChatState();
+      if (data) {
+        chatState.rooms = data.rooms || [];
+        chatState.messages = data.messages || {};
+      }
+    }
+
+    function saveChatState() {
+      RC.saveChatState({
+        rooms: chatState.rooms,
+        messages: chatState.messages
+      });
+    }
+
+    function renderRooms() {
+      const el = document.getElementById("roomList");
+      if (!chatState.rooms.length) {
+        el.innerHTML = "<p style='opacity:0.7;'>No rooms yet. Create one.</p>";
+        return;
+      }
+      el.innerHTML = chatState.rooms.map(r => `
+        <div class="chat-room-item ${r.id === chatState.activeRoomId ? "active" : ""}" data-room-id="${r.id}">
+          <span>${r.name}</span>
+          <span style="opacity:0.7;font-size:0.8rem;">Room</span>
+        </div>
+      `).join("");
+
+      el.querySelectorAll(".chat-room-item").forEach(item => {
+        item.onclick = () => {
+          chatState.activeRoomId = item.dataset.roomId;
+          renderRooms();
+          renderActiveRoom();
+        };
+      });
+    }
+
+    function renderActiveRoom() {
+      const nameEl = document.getElementById("activeRoomName");
+      const presenceEl = document.getElementById("roomPresence");
+      const msgEl = document.getElementById("messages");
+      const input = document.getElementById("messageInput");
+      const sendBtn = document.getElementById("sendBtn");
+
+      if (!chatState.activeRoomId) {
+        nameEl.textContent = "Select a room";
+        presenceEl.textContent = "0 online";
+        msgEl.innerHTML = "";
+        input.disabled = true;
+        sendBtn.disabled = true;
+        return;
+      }
+
+      const room = chatState.rooms.find(r => r.id === chatState.activeRoomId);
+      nameEl.textContent = room ? room.name : "Room";
+      presenceEl.textContent = "Many skaters can join here"; // placeholder for real presence
+
+      input.disabled = false;
+      sendBtn.disabled = false;
+
+      const msgs = chatState.messages[chatState.activeRoomId] || [];
+      msgEl.innerHTML = msgs.map(m => `
+        <div class="chat-message ${m.userId === userId ? "me" : ""}">
+          <div style="font-size:0.8rem;opacity:0.8;">${m.username}</div>
+          <div>${m.text}</div>
+        </div>
+      `).join("");
+
+      msgEl.scrollTop = msgEl.scrollHeight;
+    }
+
+    function sendMessage() {
+      if (!chatState.activeRoomId) return;
+      const input = document.getElementById("messageInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const roomId = chatState.activeRoomId;
+      if (!chatState.messages[roomId]) chatState.messages[roomId] = [];
+
+      chatState.messages[roomId].push({
+        id: "msg_" + Date.now(),
+        userId,
+        username,
+        text,
+        ts: Date.now()
+      });
+
+      saveChatState();
+      input.value = "";
+      renderActiveRoom();
+
+      // Here is where your Render-backed signaling/WebRTC broadcast would go.
+      // e.g. send over WebSocket/DataChannel to other clients.
+    }
+
+    function createRoom() {
+      const name = prompt("Room name?");
+      if (!name) return;
+      const id = "room_" + Date.now();
+      chatState.rooms.push({ id, name, createdAt: Date.now() });
+      if (!chatState.messages[id]) chatState.messages[id] = [];
+      chatState.activeRoomId = id;
+      saveChatState();
+      renderRooms();
+      renderActiveRoom();
+    }
+
+    document.getElementById("sendBtn").onclick = sendMessage;
+    document.getElementById("messageInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+    document.getElementById("newRoomBtn").onclick = createRoom;
+
+    loadChatState();
+    renderRooms();
+    renderActiveRoom();
+  </script>
+
+</body>
+</html>
