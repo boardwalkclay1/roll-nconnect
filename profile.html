@@ -3,69 +3,192 @@
 <head>
   <meta charset="UTF-8">
   <title>Your Profile — Roll ’n Connect</title>
-  <link rel="stylesheet" href="rc_global.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="rc_style.css">
 </head>
+
 <body>
+
+  <!-- STARFIELD -->
   <div class="stars1"></div>
   <div class="stars2"></div>
   <div class="stars3"></div>
 
-  <div class="glass" style="max-width:900px;margin:80px auto;">
-    <h1 class="section-title">Your Profile</h1>
+  <!-- LOADING -->
+  <div class="rc-loading-overlay" id="loadingScreen">
+    <div class="rc-loading-track">
+      <div class="rc-longboard"></div>
+      <div class="rc-rollerskate"></div>
+    </div>
+    <div class="rc-loading-text">Loading Profile…</div>
+  </div>
 
-    <div id="profileView">
-      <!-- Filled by JS -->
+  <!-- HAMBURGER -->
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="notifications.html">Notifications</a>
+    <a href="events.html">Events</a>
+    <a href="find-spots.html">Find Spots</a>
+    <a href="chatrooms.html">Chatrooms</a>
+    <a href="profile.html">Your Profile</a>
+    <a href="profile-edit.html">Edit Profile</a>
+  </div>
+
+  <!-- FLOATING BUBBLES -->
+  <a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
+  <a href="events.html" class="bubble" id="bubbleEvents">Events</a>
+  <a href="dashboard.html" class="bubble" id="bubbleDash">Dashboard</a>
+  <a href="notifications.html" class="bubble" id="bubbleNotif">Alerts</a>
+
+  <!-- MAIN -->
+  <div class="wrapper">
+
+    <!-- PROFILE HEADER -->
+    <div class="glass" style="padding:40px;margin-bottom:40px;">
+      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+        <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.1);">
+          <img id="profileAvatar" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+
+        <div>
+          <h1 id="profileName" class="glow-white" style="margin-bottom:4px;"></h1>
+          <div id="profileUsername" style="opacity:0.8;margin-bottom:10px;"></div>
+          <div id="profileBio" style="opacity:0.8;max-width:600px;"></div>
+
+          <div style="margin-top:16px;">
+            <a href="profile-edit.html" class="btn-primary">Edit Profile</a>
+            <a href="chatrooms.html" class="btn-ghost">Message</a>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div style="margin-top:30px;">
-      <a href="profile-edit.html" class="btn-primary">Edit Profile</a>
+    <!-- PROFILE CLIP -->
+    <div class="glass" style="margin-bottom:40px;">
+      <h2 class="section-title">Profile Clip</h2>
+      <div id="profileClipContainer"></div>
     </div>
 
-    <hr style="margin:40px 0;border-color:rgba(255,255,255,0.2);">
+    <!-- GRID: LESSONS + CLIPS -->
+    <div class="grid-2">
 
-    <h2 class="section-title" style="font-size:2rem;">Your Calendar</h2>
-    <div id="miniCalendar">
-      <!-- Mini calendar preview -->
+      <!-- LESSONS -->
+      <div class="glass">
+        <h2 class="section-title">Lessons</h2>
+        <div id="lessonsList"></div>
+      </div>
+
+      <!-- CLIPS -->
+      <div class="glass">
+        <h2 class="section-title">Clips</h2>
+        <div id="clipsList"></div>
+      </div>
+
     </div>
 
-    <div style="margin-top:20px;">
-      <a href="calendar.html" class="btn-primary">Open Full Calendar</a>
+    <!-- MINI CALENDAR -->
+    <div class="glass" style="margin-top:40px;">
+      <h2 class="section-title">Upcoming Sessions</h2>
+      <div id="miniCalendar"></div>
+      <a href="calendar.html" class="btn-primary" style="margin-top:10px;">Open Calendar</a>
     </div>
+
   </div>
 
   <script src="rc_core.js"></script>
+
   <script>
+    /* LOADING */
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const ls = document.getElementById("loadingScreen");
+        ls.style.opacity = "0";
+        setTimeout(() => ls.remove(), 600);
+      }, 600);
+    });
+
+    /* SIDEBAR */
+    document.getElementById("hamburger").onclick = () => {
+      document.getElementById("hamburger").classList.toggle("active");
+      document.getElementById("sidebar").classList.toggle("open");
+    };
+
+    /* PROFILE */
     function renderProfile() {
-      const profile = RC.getProfile();
-      const container = document.getElementById("profileView");
+      const p = RC.getProfile();
 
-      const name = profile.name || "Unnamed Skater";
-      const city = profile.city || "No city set";
-      const discipline = profile.discipline || "No discipline set";
-      const bio = profile.bio || "No bio yet.";
-      const avatar = profile.avatarDataUrl || "";
+      document.getElementById("profileName").textContent = p.name || "Unnamed Skater";
+      document.getElementById("profileUsername").textContent = "@" + (p.username || "unknown");
+      document.getElementById("profileBio").textContent = p.bio || "";
 
-      container.innerHTML = `
-        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
-          <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.15);box-shadow:0 0 25px rgba(255,255,255,0.4);">
-            ${avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;">` : ""}
-          </div>
-          <div>
-            <div style="font-size:1.8rem;font-weight:600;margin-bottom:6px;">${name}</div>
-            <div style="opacity:0.8;margin-bottom:4px;">${city}</div>
-            <div style="opacity:0.8;margin-bottom:4px;">Discipline: ${discipline}</div>
-            <div style="opacity:0.9;margin-top:10px;max-width:500px;">${bio}</div>
-          </div>
-        </div>
+      if (p.avatarUrl) {
+        document.getElementById("profileAvatar").src = p.avatarUrl;
+      }
+    }
+
+    /* PROFILE CLIP */
+    function renderProfileClip() {
+      const p = RC.getProfile();
+      const el = document.getElementById("profileClipContainer");
+
+      if (!p.profileClipUrl) {
+        el.innerHTML = "<p style='opacity:0.7;'>No profile clip uploaded.</p>";
+        return;
+      }
+
+      el.innerHTML = `
+        <video src="${p.profileClipUrl}" controls style="width:100%;border-radius:14px;"></video>
       `;
     }
 
+    /* LESSONS */
+    function renderLessons() {
+      const lessons = RC.getLessons();
+      const el = document.getElementById("lessonsList");
+
+      if (!lessons.length) {
+        el.innerHTML = "<p style='opacity:0.7;'>No lessons added.</p>";
+        return;
+      }
+
+      el.innerHTML = lessons.map(ls => `
+        <div class="glass-card" style="margin-bottom:10px;">
+          <strong>${ls.title}</strong><br>
+          ${(ls.price ? "$" + ls.price : "Free")} • ${ls.duration} min<br>
+          <span style="opacity:0.8;">${ls.description}</span>
+        </div>
+      `).join("");
+    }
+
+    /* CLIPS */
+    function renderClips() {
+      const clips = RC.getClips();
+      const el = document.getElementById("clipsList");
+
+      if (!clips.length) {
+        el.innerHTML = "<p style='opacity:0.7;'>No clips uploaded.</p>";
+        return;
+      }
+
+      el.innerHTML = clips.map(url => `
+        <video src="${url}" controls style="width:100%;border-radius:14px;margin-bottom:10px;"></video>
+      `).join("");
+    }
+
+    /* MINI CALENDAR */
     function renderMiniCalendar() {
-      const events = RC.getCalendar();
-      const container = document.getElementById("miniCalendar");
+      const events = RC.getCalendarItems();
+      const el = document.getElementById("miniCalendar");
 
       if (!events.length) {
-        container.innerHTML = `<div style="opacity:0.8;">No events yet. Add some in your calendar.</div>`;
+        el.innerHTML = "<p style='opacity:0.7;'>No upcoming sessions.</p>";
         return;
       }
 
@@ -74,17 +197,21 @@
         .sort((a,b)=> new Date(a.date) - new Date(b.date))
         .slice(0,5);
 
-      container.innerHTML = upcoming.map(ev => `
-        <div class="card" style="margin-bottom:10px;padding:14px;">
-          <div style="font-weight:600;">${ev.title || "Untitled Event"}</div>
-          <div style="opacity:0.8;">${ev.date} • ${ev.time || ""}</div>
-          <div style="opacity:0.8;">${ev.location || ""}</div>
+      el.innerHTML = upcoming.map(ev => `
+        <div class="glass-card" style="margin-bottom:10px;">
+          <strong>${ev.title || "Untitled"}</strong><br>
+          <span style="opacity:0.8;">${ev.date} • ${ev.time || ""}</span><br>
+          <span style="opacity:0.8;">${ev.location || ""}</span>
         </div>
       `).join("");
     }
 
     renderProfile();
+    renderProfileClip();
+    renderLessons();
+    renderClips();
     renderMiniCalendar();
   </script>
+
 </body>
 </html>
