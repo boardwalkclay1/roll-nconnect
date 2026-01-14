@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Find Spots — Roll ’n Connect</title>
+  <link rel="stylesheet" href="rc_global.css">
+</head>
+<body>
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="glass" style="max-width:1100px;margin:80px auto;">
+    <h1 class="section-title">Find Spots</h1>
+
+    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:30px;">
+      <input id="spotSearch" type="text" placeholder="Search city, rink, boardwalk..." style="flex:2 1 260px;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      <input id="spotRadius" type="number" min="1" max="200" value="25" style="flex:1 1 120px;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      <span style="align-self:center;opacity:0.8;">mile radius</span>
+      <button id="spotSearchBtn" class="btn-primary" style="flex:0 0 auto;">Search</button>
+    </div>
+
+    <div id="spotsList" class="spot-grid">
+      <!-- Spots will render here once wired to real data -->
+      <div style="opacity:0.8;">Spots search coming online soon. This page is wired and ready.</div>
+    </div>
+  </div>
+
+  <script src="rc_core.js"></script>
+  <script>
+    // Placeholder for future real-time / API integration
+    // We'll later hook this into a spots API or shared data via signaling server.
+  </script>
+</body>
+</html>
