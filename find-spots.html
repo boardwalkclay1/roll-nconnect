@@ -3,33 +3,209 @@
 <head>
   <meta charset="UTF-8">
   <title>Find Spots — Roll ’n Connect</title>
-  <link rel="stylesheet" href="rc_global.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="rc_style.css">
+  <style>
+    .spots-layout {
+      display:grid;
+      grid-template-columns: minmax(0,2fr) minmax(0,1.2fr);
+      gap:24px;
+    }
+    @media(max-width:900px){
+      .spots-layout{grid-template-columns:1fr;}
+    }
+    .spots-map-shell {
+      position:relative;
+      border-radius:24px;
+      overflow:hidden;
+      background:radial-gradient(circle at top,#101528,#05060b 60%,#000);
+      box-shadow:0 0 40px rgba(255,255,255,0.25);
+      min-height:420px;
+    }
+    .spots-map-canvas {
+      position:absolute;
+      inset:0;
+      background:#02040a;
+    }
+    .spots-map-overlay {
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background-image:radial-gradient(circle at 10% 20%,rgba(79,195,255,0.12) 0,transparent 55%),
+                       radial-gradient(circle at 80% 80%,rgba(255,111,145,0.12) 0,transparent 55%);
+      mix-blend-mode:screen;
+    }
+    .spots-marker {
+      position:absolute;
+      width:16px;
+      height:16px;
+      border-radius:50%;
+      background:#4fc3ff;
+      box-shadow:0 0 18px rgba(79,195,255,0.9);
+      transform:translate(-50%,-50%);
+      cursor:pointer;
+    }
+    .spots-marker.spot-session {
+      background:#ff6f91;
+      box-shadow:0 0 18px rgba(255,111,145,0.9);
+    }
+  </style>
 </head>
+
 <body>
+
   <div class="stars1"></div>
   <div class="stars2"></div>
   <div class="stars3"></div>
 
-  <div class="glass" style="max-width:1100px;margin:80px auto;">
-    <h1 class="section-title">Find Spots</h1>
+  <div class="rc-loading-overlay" id="loadingScreen">
+    <div class="rc-loading-track">
+      <div class="rc-longboard"></div>
+      <div class="rc-rollerskate"></div>
+    </div>
+    <div class="rc-loading-text">Finding spots…</div>
+  </div>
 
-    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:30px;">
-      <input id="spotSearch" type="text" placeholder="Search city, rink, boardwalk..." style="flex:2 1 260px;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
-      <input id="spotRadius" type="number" min="1" max="200" value="25" style="flex:1 1 120px;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
-      <span style="align-self:center;opacity:0.8;">mile radius</span>
-      <button id="spotSearchBtn" class="btn-primary" style="flex:0 0 auto;">Search</button>
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="events.html">Events</a>
+    <a href="find-spots.html">Find Spots</a>
+    <a href="chatrooms.html">Chatrooms</a>
+    <a href="profile.html">Your Profile</a>
+    <a href="profile-edit.html">Edit Profile</a>
+  </div>
+
+  <a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
+  <a href="events.html" class="bubble" id="bubbleEvents">Events</a>
+  <a href="dashboard.html" class="bubble" id="bubbleDash">Dashboard</a>
+  <a href="profile.html" class="bubble" id="bubbleProfile">Profile</a>
+
+  <div class="wrapper">
+    <div class="glass" style="padding:32px;margin-bottom:32px;">
+      <h1 class="section-title">Find Spots</h1>
+      <p style="opacity:0.8;">Your own map engine. Rails, bowls, rinks, plazas—mapped and alive.</p>
+
+      <div class="flex-between flex-wrap gap-md" style="margin-top:18px;">
+        <input id="spotSearchInput" class="glass-input" placeholder="Search spots…">
+        <input id="spotLocationInput" class="glass-input" placeholder="City or ZIP">
+        <input id="spotRadiusInput" class="glass-input" type="number" min="1" max="200" value="25" style="max-width:120px;" placeholder="Miles">
+        <button class="btn-primary" id="spotSearchBtn">Search</button>
+      </div>
     </div>
 
-    <div id="spotsList" class="spot-grid">
-      <!-- Spots will render here once wired to real data -->
-      <div style="opacity:0.8;">Spots search coming online soon. This page is wired and ready.</div>
+    <div class="spots-layout">
+      <div class="spots-map-shell glass">
+        <div id="spotsMapCanvas" class="spots-map-canvas"></div>
+        <div class="spots-map-overlay"></div>
+      </div>
+
+      <div class="glass">
+        <h2 class="section-title">Spots List</h2>
+        <div id="spotsList"></div>
+      </div>
     </div>
   </div>
 
   <script src="rc_core.js"></script>
+
   <script>
-    // Placeholder for future real-time / API integration
-    // We'll later hook this into a spots API or shared data via signaling server.
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const ls = document.getElementById("loadingScreen");
+        ls.style.opacity = "0";
+        setTimeout(() => ls.remove(), 600);
+      }, 600);
+    });
+
+    document.getElementById("hamburger").onclick = () => {
+      document.getElementById("hamburger").classList.toggle("active");
+      document.getElementById("sidebar").classList.toggle("open");
+    };
+
+    /* CUSTOM MAP ENGINE SHELL
+       - We treat the map as a simple 2D plane for now.
+       - Later, you can plug in tiles (OSM, custom, etc.) and real lat/lng projection.
+    */
+
+    const mapState = {
+      width: 0,
+      height: 0,
+      spots: [] // { id, name, type, x, y, city, description, liveSession }
+    };
+
+    function fakeFetchSpots(keyword, location, radiusMiles) {
+      // Placeholder for your Render-backed API
+      return [
+        { id:"s1", name:"Galaxy Rink", type:"rink", x:0.3, y:0.4, city:"Decatur, GA", description:"Indoor rink with disco lights.", liveSession:true },
+        { id:"s2", name:"Rail Plaza", type:"street", x:0.7, y:0.3, city:"Atlanta, GA", description:"Rails, ledges, and flat.", liveSession:false },
+        { id:"s3", name:"Bowl Park", type:"park", x:0.5, y:0.7, city:"Atlanta, GA", description:"Deep bowl and flow lines.", liveSession:true }
+      ].filter(s => {
+        const k = keyword.toLowerCase();
+        const matchesK = !k || s.name.toLowerCase().includes(k) || s.type.toLowerCase().includes(k);
+        const matchesL = !location || s.city.toLowerCase().includes(location.toLowerCase());
+        return matchesK && matchesL;
+      });
+    }
+
+    function renderSpotsList() {
+      const el = document.getElementById("spotsList");
+      if (!mapState.spots.length) {
+        el.innerHTML = "<p style='opacity:0.7;'>No spots found.</p>";
+        return;
+      }
+      el.innerHTML = mapState.spots.map(s => `
+        <div class="glass-card" style="margin-bottom:12px;">
+          <strong>${s.name}</strong><br>
+          <span style="opacity:0.8;">${s.type} • ${s.city}</span><br>
+          <span style="opacity:0.8;">${s.description}</span><br>
+          ${s.liveSession ? `<span class="tag-pill tag-pink">Live session</span>` : ""}
+        </div>
+      `).join("");
+    }
+
+    function renderSpotsOnMap() {
+      const canvas = document.getElementById("spotsMapCanvas");
+      canvas.innerHTML = "";
+      const rect = canvas.getBoundingClientRect();
+      mapState.width = rect.width;
+      mapState.height = rect.height;
+
+      mapState.spots.forEach(s => {
+        const m = document.createElement("div");
+        m.className = "spots-marker" + (s.liveSession ? " spot-session" : "");
+        m.style.left = (s.x * mapState.width) + "px";
+        m.style.top = (s.y * mapState.height) + "px";
+        m.title = s.name;
+        m.onclick = () => {
+          const card = document.querySelector(`[data-spot-id="${s.id}"]`);
+          if (card) card.scrollIntoView({ behavior:"smooth", block:"center" });
+        };
+        canvas.appendChild(m);
+      });
+    }
+
+    async function searchSpots() {
+      const keyword = document.getElementById("spotSearchInput").value.trim();
+      const location = document.getElementById("spotLocationInput").value.trim();
+      const radius = document.getElementById("spotRadiusInput").value.trim();
+
+      const spots = fakeFetchSpots(keyword, location, radius);
+      mapState.spots = spots;
+      renderSpotsList();
+      renderSpotsOnMap();
+    }
+
+    document.getElementById("spotSearchBtn").onclick = searchSpots;
+    window.addEventListener("resize", renderSpotsOnMap);
+
+    searchSpots();
   </script>
+
 </body>
 </html>
