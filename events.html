@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Events — Roll ’n Connect</title>
+  <link rel="stylesheet" href="rc_global.css">
+</head>
+<body>
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="glass" style="max-width:1100px;margin:80px auto;">
+    <h1 class="section-title">Skate Events Near You</h1>
+
+    <div style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:30px;">
+      <input id="eventLocation" type="text" placeholder="Enter city or location..." style="flex:2 1 260px;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      <input id="eventRadius" type="number" min="1" max="200" value="25" style="flex:1 1 120px;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
+      <span style="align-self:center;opacity:0.8;">mile radius</span>
+      <button id="eventSearchBtn" class="btn-primary" style="flex:0 0 auto;">Search</button>
+    </div>
+
+    <div id="eventsResults" class="event-grid">
+      <div style="opacity:0.8;">Real-time skate events will appear here once we wire the live data feed.</div>
+    </div>
+  </div>
+
+  <script src="rc_core.js"></script>
+  <script>
+    // Later:
+    // - Hook to a skate events API or custom backend
+    // - Use eventLocation + eventRadius
+    // - Render cards into #eventsResults
+  </script>
+</body>
+</html>
