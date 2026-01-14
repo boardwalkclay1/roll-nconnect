@@ -2,108 +2,474 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Calendar — Roll ’n Connect</title>
+  <title>My Calendar – Roll ’n Connect</title>
   <link rel="stylesheet" href="rc_global.css">
 </head>
 <body>
+  <!-- STARFIELD -->
   <div class="stars1"></div>
   <div class="stars2"></div>
   <div class="stars3"></div>
 
-  <div class="glass" style="max-width:1000px;margin:80px auto;">
-    <h1 class="section-title">Your Calendar</h1>
+  <!-- BURGER -->
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
 
-    <form id="eventForm" style="display:flex;flex-wrap:wrap;gap:16px;margin-bottom:30px;">
-      <div style="flex:1 1 180px;">
-        <label>Date</label><br>
-        <input type="date" id="dateInput" style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
-      </div>
-      <div style="flex:1 1 180px;">
-        <label>Time</label><br>
-        <input type="time" id="timeInput" style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
-      </div>
-      <div style="flex:2 1 220px;">
-        <label>Title</label><br>
-        <input type="text" id="titleInput" placeholder="Night skate, practice, meetup..." style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
-      </div>
-      <div style="flex:2 1 220px;">
-        <label>Location</label><br>
-        <input type="text" id="locationInput" placeholder="Boardwalk, rink, city..." style="width:100%;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;">
-      </div>
-      <div style="flex:1 1 160px;display:flex;align-items:flex-end;">
-        <button type="submit" class="btn-primary" style="width:100%;">Add Event</button>
-      </div>
-    </form>
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="profile.html">Profile</a>
+    <a href="chatrooms.html">Chatrooms</a>
+    <a href="find-spots.html">Find Spots</a>
+    <a href="events.html">Events</a>
+    <a href="calendar.html">Calendar</a>
+  </div>
 
-    <div id="eventsList">
-      <!-- Events render here -->
+  <!-- FLOATING BUBBLES -->
+  <a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
+  <a href="profile.html" class="bubble" id="bubbleProfile">Profile</a>
+  <a href="find-spots.html" class="bubble" id="bubbleSpots">Spots</a>
+  <a href="dashboard.html" class="bubble" id="bubbleDash">Dashboard</a>
+
+  <!-- MAIN -->
+  <div class="wrapper">
+    <div class="glass calendar-shell">
+      <div class="title">My Calendar</div>
+      <p class="subtitle">One giant, editable calendar. Click a day, add and edit your stuff.</p>
+
+      <!-- MONTH HEADER -->
+      <div class="month-header">
+        <div class="month-name" id="monthName"></div>
+        <div class="month-nav">
+          <button id="prevMonthBtn">⟵ Prev</button>
+          <button id="nextMonthBtn">Next ⟶</button>
+        </div>
+      </div>
+
+      <!-- WEEKDAYS -->
+      <div class="weekdays">
+        <div class="weekday">Sun</div>
+        <div class="weekday">Mon</div>
+        <div class="weekday">Tue</div>
+        <div class="weekday">Wed</div>
+        <div class="weekday">Thu</div>
+        <div class="weekday">Fri</div>
+        <div class="weekday">Sat</div>
+      </div>
+
+      <!-- GIANT GRID -->
+      <div class="calendar-grid" id="calendarGrid"></div>
+
+      <!-- DAY DETAILS -->
+      <div class="details">
+        <div class="details-header">
+          <div class="details-date" id="detailsDate">Select a day</div>
+          <button class="add-btn" id="addItemBtn">+ Add Item</button>
+        </div>
+        <div class="item-list" id="itemList"></div>
+        <div class="item-empty" id="itemEmpty">Nothing on this day yet.</div>
+      </div>
     </div>
   </div>
 
   <script src="rc_core.js"></script>
   <script>
-    const form = document.getElementById("eventForm");
-    const dateInput = document.getElementById("dateInput");
-    const timeInput = document.getElementById("timeInput");
-    const titleInput = document.getElementById("titleInput");
-    const locationInput = document.getElementById("locationInput");
-    const eventsList = document.getElementById("eventsList");
+    /* USER CONTEXT (PROFILE-BASED) */
+    let profile = RC.getProfile();
+    let OWNER_ID = profile.id || profile.userId || profile.username || "guest_" + Date.now();
 
-    let events = RC.getCalendar();
+    /* BURGER TOGGLE */
+    document.getElementById("hamburger").onclick = () => {
+      document.getElementById("hamburger").classList.toggle("active");
+      document.getElementById("sidebar").classList.toggle("open");
+    };
 
-    function renderEvents() {
-      if (!events.length) {
-        eventsList.innerHTML = `<div style="opacity:0.8;">No events yet. Add your first one above.</div>`;
-        return;
+    /* FLOATING BUBBLES PONG ANIMATION */
+    const bubbleSize = 180;
+    const bubbles = [
+      { el: document.getElementById("bubbleChat"),    x:60, y:110, vx:1.4, vy:1.1 },
+      { el: document.getElementById("bubbleProfile"), x:window.innerWidth-260, y:80, vx:-1.3, vy:1.4 },
+      { el: document.getElementById("bubbleSpots"),   x:80, y:window.innerHeight-260, vx:1.6, vy:-1.2 },
+      { el: document.getElementById("bubbleDash"),    x:window.innerWidth-260, y:window.innerHeight-260, vx:-1.5, vy:-1.3 }
+    ];
+
+    function positionBubbles() {
+      bubbles.forEach(b => {
+        b.el.style.left = b.x + "px";
+        b.el.style.top = b.y + "px";
+      });
+    }
+    function animateBubbles() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      bubbles.forEach(b => {
+        b.x += b.vx;
+        b.y += b.vy;
+
+        if (b.x <= 0 || b.x + bubbleSize >= w) b.vx *= -1;
+        if (b.y <= 0 || b.y + bubbleSize >= h) b.vy *= -1;
+
+        bubbles.forEach(o => {
+          if (o === b) return;
+          const dx = (b.x + bubbleSize/2) - (o.x + bubbleSize/2);
+          const dy = (b.y + bubbleSize/2) - (o.y + bubbleSize/2);
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < bubbleSize) {
+            b.vx *= -1;
+            b.vy *= -1;
+          }
+        });
+
+        b.el.style.left = b.x + "px";
+        b.el.style.top = b.y + "px";
+      });
+
+      requestAnimationFrame(animateBubbles);
+    }
+    positionBubbles();
+    requestAnimationFrame(animateBubbles);
+
+    /* DATE HELPERS */
+    function toISODate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const day = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+    function fromISODate(iso) {
+      const [y,m,d] = iso.split("-");
+      return new Date(+y, +m-1, +d);
+    }
+    function prettyDate(iso) {
+      const d = fromISODate(iso);
+      return d.toLocaleDateString(undefined, { weekday:"long", month:"long", day:"numeric", year:"numeric" });
+    }
+
+    /* CALENDAR STATE */
+    let currentYear, currentMonth; // 0-11
+    let selectedDate = null;
+
+    function getItemsForOwner() {
+      return RC.getCalendarItems().filter(i => i.ownerId === OWNER_ID);
+    }
+
+    /* RENDER MONTH GRID */
+    function renderMonth() {
+      const monthNameEl = document.getElementById("monthName");
+      const grid = document.getElementById("calendarGrid");
+      grid.innerHTML = "";
+
+      const firstOfMonth = new Date(currentYear, currentMonth, 1);
+      const monthLabel = firstOfMonth.toLocaleString(undefined, { month:"long", year:"numeric" });
+      monthNameEl.textContent = monthLabel;
+
+      const firstDayIndex = firstOfMonth.getDay();
+      const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+      const daysInPrev = new Date(currentYear, currentMonth, 0).getDate();
+      const todayISO = toISODate(new Date());
+      const allItems = getItemsForOwner();
+
+      const cells = [];
+      for (let i=0; i<firstDayIndex; i++) {
+        const day = daysInPrev - firstDayIndex + 1 + i;
+        cells.push({ date: new Date(currentYear, currentMonth-1, day), other:true });
+      }
+      for (let d=1; d<=daysInMonth; d++) {
+        cells.push({ date: new Date(currentYear, currentMonth, d), other:false });
+      }
+      while (cells.length % 7 !== 0) {
+        const day = cells.length - firstDayIndex - daysInMonth + 1;
+        cells.push({ date: new Date(currentYear, currentMonth+1, day), other:true });
       }
 
-      const sorted = events.slice().sort((a,b)=> new Date(a.date) - new Date(b.date));
+      cells.forEach(cell => {
+        const iso = toISODate(cell.date);
+        const cellItems = allItems.filter(i => i.date === iso);
 
-      eventsList.innerHTML = sorted.map(ev => `
-        <div class="event-card" style="margin-bottom:12px;">
-          <div style="font-weight:600;font-size:1.1rem;">${ev.title || "Untitled Event"}</div>
-          <div style="opacity:0.85;margin-top:4px;">${ev.date} • ${ev.time || ""}</div>
-          <div style="opacity:0.8;margin-top:4px;">${ev.location || ""}</div>
-          <button data-id="${ev.id}" class="btn-primary" style="margin-top:10px;padding:6px 12px;font-size:0.9rem;">Remove</button>
-        </div>
-      `).join("");
+        const div = document.createElement("div");
+        div.className = "day-cell" + (cell.other ? " other-month" : "");
+        if (iso === todayISO) div.classList.add("today");
+        if (iso === selectedDate) div.classList.add("selected");
+        div.dataset.date = iso;
 
-      // Attach remove handlers
-      Array.from(eventsList.querySelectorAll("button[data-id]")).forEach(btn => {
-        btn.addEventListener("click", () => {
-          const id = btn.getAttribute("data-id");
-          events = events.filter(e => e.id !== id);
-          RC.saveCalendar(events);
-          renderEvents();
-        });
+        const num = document.createElement("div");
+        num.className = "day-number";
+        num.textContent = cell.date.getDate();
+        div.appendChild(num);
+
+        if (cellItems.length) {
+          const tagsDiv = document.createElement("div");
+          tagsDiv.className = "day-tags";
+
+          const hasEvent = cellItems.some(i => i.type === "event");
+          const hasLesson = cellItems.some(i => i.type === "lesson");
+          const hasSpot = cellItems.some(i => i.type === "spot");
+          const hasCustom = cellItems.some(i => i.type === "custom");
+
+          if (hasEvent) {
+            const t = document.createElement("span");
+            t.className = "day-tag-pill event";
+            t.textContent = "Event";
+            tagsDiv.appendChild(t);
+          }
+          if (hasLesson) {
+            const t = document.createElement("span");
+            t.className = "day-tag-pill lesson";
+            t.textContent = "Lesson";
+            tagsDiv.appendChild(t);
+          }
+          if (hasSpot) {
+            const t = document.createElement("span");
+            t.className = "day-tag-pill spot";
+            t.textContent = "Spot";
+            tagsDiv.appendChild(t);
+          }
+          if (hasCustom) {
+            const t = document.createElement("span");
+            t.className = "day-tag-pill custom";
+            t.textContent = "Custom";
+            tagsDiv.appendChild(t);
+          }
+          div.appendChild(tagsDiv);
+        }
+
+        div.onclick = () => {
+          selectedDate = iso;
+          renderMonth();
+          renderDayDetails();
+        };
+
+        grid.appendChild(div);
       });
     }
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      const date = dateInput.value;
-      const time = timeInput.value;
-      const title = titleInput.value.trim();
-      const location = locationInput.value.trim();
+    /* RENDER DAY DETAILS */
+    function renderDayDetails() {
+      const dateLabel = document.getElementById("detailsDate");
+      const listEl = document.getElementById("itemList");
+      const emptyEl = document.getElementById("itemEmpty");
 
-      if (!date) return;
+      if (!selectedDate) {
+        emptyEl.style.display = "block";
+        dateLabel.textContent = "Select a day";
+        listEl.innerHTML = "";
+        return;
+      }
 
-      events.push({
-        id: RC.uuid(),
-        date,
-        time,
-        title,
-        location
+      dateLabel.textContent = prettyDate(selectedDate);
+
+      const allItems = getItemsForOwner().filter(i => i.date === selectedDate);
+      listEl.innerHTML = "";
+
+      if (!allItems.length) {
+        emptyEl.style.display = "block";
+        return;
+      }
+      emptyEl.style.display = "none";
+
+      allItems.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "item";
+        card.dataset.id = item.id;
+
+        const typeLabel =
+          item.type === "event" ? "📅 Event" :
+          item.type === "lesson" ? "🎓 Lesson" :
+          item.type === "spot" ? "📍 Spot" :
+          "⭐ Custom";
+
+        const privacyLabel =
+          item.privacy === "public" ? "🌐 Public" :
+          item.privacy === "private" ? "🔒 Private" :
+          item.privacy === "groups" ? "👥 Groups" :
+          "🌐 Public";
+
+        const groupsText =
+          item.privacy === "groups" && item.groups && item.groups.length
+            ? `<br>Groups: ${item.groups.join(", ")}`
+            : "";
+
+        card.innerHTML = `
+          <div class="item-header">
+            <div>
+              <strong>${item.title || "Untitled"}</strong>
+              <div class="item-type">${typeLabel}</div>
+            </div>
+            <div class="item-privacy">${privacyLabel}</div>
+          </div>
+          <div class="item-body">
+            ${item.time ? `⏰ ${item.time}<br>` : ""}
+            ${item.location ? `📍 ${item.location}<br>` : ""}
+            ${item.link ? `<a href="${item.link}" target="_blank">Open</a><br>` : ""}
+            ${groupsText}
+          </div>
+          <div class="item-actions">
+            <button class="edit-btn">Edit</button>
+            <button class="delete-btn">Delete</button>
+          </div>
+        `;
+
+        listEl.appendChild(card);
+      });
+    }
+
+    /* ADD CUSTOM ITEM */
+    function addItemForSelectedDay() {
+      if (!selectedDate) {
+        selectedDate = toISODate(new Date());
+      }
+      const items = RC.getCalendarItems();
+      const id = RC.uuid();
+
+      items.push({
+        id,
+        ownerId: OWNER_ID,
+        type: "custom",
+        refId: null,
+        title: "New item",
+        date: selectedDate,
+        time: "",
+        location: "",
+        link: "",
+        privacy: "private",
+        groups: []
       });
 
-      RC.saveCalendar(events);
-      renderEvents();
+      RC.saveCalendarItems(items);
+      renderMonth();
+      renderDayDetails();
+      openEditor(id);
+    }
 
-      titleInput.value = "";
-      locationInput.value = "";
+    /* INLINE EDITOR */
+    function openEditor(id) {
+      const items = RC.getCalendarItems();
+      const item = items.find(i => i.id === id && i.ownerId === OWNER_ID);
+      if (!item) return;
+
+      const listEl = document.getElementById("itemList");
+      const card = listEl.querySelector(\`.item[data-id="\${id}"]\`);
+      if (!card) return;
+
+      const existing = card.querySelector(".editor");
+      if (existing) existing.remove();
+
+      const ed = document.createElement("div");
+      ed.className = "editor";
+      const groupsStr = (item.groups || []).join(", ");
+
+      ed.innerHTML = `
+        <div class="editor-row">
+          <input data-field="title" placeholder="Title" value="${item.title || ""}">
+          <input data-field="time" placeholder="Time (e.g. 7:00 PM)" value="${item.time || ""}">
+          <input data-field="location" placeholder="Location" value="${item.location || ""}">
+        </div>
+        <div class="editor-row" style="margin-top:4px;">
+          <select data-field="type">
+            <option value="event" ${item.type === "event" ? "selected" : ""}>Event</option>
+            <option value="lesson" ${item.type === "lesson" ? "selected" : ""}>Lesson</option>
+            <option value="spot" ${item.type === "spot" ? "selected" : ""}>Spot</option>
+            <option value="custom" ${item.type === "custom" ? "selected" : ""}>Custom</option>
+          </select>
+          <select data-field="privacy">
+            <option value="public" ${item.privacy === "public" ? "selected" : ""}>Public</option>
+            <option value="private" ${item.privacy === "private" ? "selected" : ""}>Private</option>
+            <option value="groups" ${item.privacy === "groups" ? "selected" : ""}>Groups</option>
+          </select>
+        </div>
+        <div class="editor-row" style="margin-top:4px;">
+          <input data-field="groups" placeholder="Groups (comma separated)" value="${groupsStr}">
+          <input data-field="link" placeholder="Link (optional)" value="${item.link || ""}">
+        </div>
+        <div class="editor-actions">
+          <button class="save-btn">Save</button>
+          <button class="cancel-btn">Cancel</button>
+        </div>
+      `;
+
+      card.appendChild(ed);
+
+      ed.querySelector(".save-btn").onclick = () => {
+        const all = RC.getCalendarItems();
+        const idx = all.findIndex(i => i.id === id && i.ownerId === OWNER_ID);
+        if (idx === -1) return;
+
+        ed.querySelectorAll("[data-field]").forEach(el => {
+          const field = el.dataset.field;
+          const val = el.value.trim();
+          if (field === "groups") {
+            all[idx].groups = val ? val.split(",").map(v => v.trim()).filter(Boolean) : [];
+          } else {
+            all[idx][field] = val || "";
+          }
+        });
+
+        RC.saveCalendarItems(all);
+        renderDayDetails();
+        renderMonth();
+      };
+
+      ed.querySelector(".cancel-btn").onclick = () => ed.remove();
+    }
+
+    /* DELETE ITEM */
+    function deleteItem(id) {
+      let items = RC.getCalendarItems();
+      items = items.filter(i => !(i.id === id && i.ownerId === OWNER_ID));
+      RC.saveCalendarItems(items);
+      renderDayDetails();
+      renderMonth();
+    }
+
+    /* LIST CLICK HANDLERS */
+    document.getElementById("itemList").addEventListener("click", e => {
+      const card = e.target.closest(".item");
+      if (!card) return;
+      const id = card.dataset.id;
+      if (e.target.classList.contains("edit-btn")) {
+        openEditor(id);
+      } else if (e.target.classList.contains("delete-btn")) {
+        deleteItem(id);
+      }
     });
 
-    renderEvents();
+    /* ADD BUTTON */
+    document.getElementById("addItemBtn").onclick = addItemForSelectedDay;
+
+    /* MONTH NAV */
+    document.getElementById("prevMonthBtn").onclick = () => {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      renderMonth();
+      renderDayDetails();
+    };
+    document.getElementById("nextMonthBtn").onclick = () => {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderMonth();
+      renderDayDetails();
+    };
+
+    /* INIT */
+    (function init() {
+      const now = new Date();
+      currentYear = now.getFullYear();
+      currentMonth = now.getMonth();
+      selectedDate = toISODate(now);
+
+      renderMonth();
+      renderDayDetails();
+    })();
   </script>
 </body>
 </html>
