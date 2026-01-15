@@ -4,108 +4,187 @@
   <meta charset="UTF-8">
   <title>Marketplace Item — Roll ’n Connect</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="rc_style.css">
+  <link rel="stylesheet" href="rc_global.css">
 </head>
 
 <body>
 
-  <!-- STARFIELD -->
+  <!-- OPTIONAL STARFIELD -->
   <div class="stars1"></div>
   <div class="stars2"></div>
   <div class="stars3"></div>
 
-  <!-- LOADING -->
-  <div class="rc-loading-overlay" id="loadingScreen">
-    <div class="rc-loading-track">
-      <div class="rc-longboard"></div>
-      <div class="rc-rollerskate"></div>
-    </div>
-    <div class="rc-loading-text">Loading Item…</div>
-  </div>
+  <div class="rc-app">
 
-  <!-- HAMBURGER -->
-  <div class="hamburger" id="hamburger">
-    <span></span><span></span><span></span>
-  </div>
+    <!-- SIDEBAR -->
+    <aside class="rc-sidebar">
+      <div class="rc-logo">Roll ’n Connect</div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <h2>Menu</h2>
-    <a href="index.html">Home</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="notifications.html">Notifications</a>
-    <a href="events.html">Events</a>
-    <a href="find-spots.html">Find Spots</a>
-    <a href="chatrooms.html">Chatrooms</a>
-    <a href="profile.html">Your Profile</a>
-    <a href="profile-edit.html">Edit Profile</a>
-  </div>
+      <nav class="rc-nav">
+        <button onclick="location.href='dashboard.html'">Dashboard</button>
+        <button onclick="location.href='events.html'">Events</button>
+        <button onclick="location.href='find-spots.html'">Find Spots</button>
+        <button onclick="location.href='chatrooms.html'">Chatrooms</button>
+        <button onclick="location.href='profile.html'">Your Profile</button>
+        <button onclick="location.href='profile-edit.html'">Edit Profile</button>
+        <button onclick="location.href='marketplace.html'">Marketplace</button>
+      </nav>
+    </aside>
 
-  <!-- MAIN -->
-  <div class="wrapper">
+    <!-- MAIN CONTENT -->
+    <main class="rc-content">
 
-    <div class="glass" style="padding:40px;">
-      <div id="itemContainer"></div>
-    </div>
+      <section class="rc-section rc-active" id="itemSection">
+
+        <!-- ITEM HEADER -->
+        <div class="rc-card" id="itemHeader"></div>
+
+        <!-- ITEM BODY -->
+        <div class="rc-card" id="itemDetails"></div>
+
+        <!-- SELLER SNAPSHOT -->
+        <div class="rc-card" id="sellerCard"></div>
+
+        <!-- RELATED ITEMS -->
+        <div class="rc-card">
+          <h3>More Like This</h3>
+          <div id="relatedGrid" class="rc-market-grid"></div>
+        </div>
+
+      </section>
+
+    </main>
 
   </div>
 
   <script src="rc_core.js"></script>
 
   <script>
-    /* LOADING */
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        const ls = document.getElementById("loadingScreen");
-        ls.style.opacity = "0";
-        setTimeout(() => ls.remove(), 600);
-      }, 600);
-    });
+    /* ---------------------------------------------------
+       SAFETY FALLBACK: If marketplace isn't defined
+    --------------------------------------------------- */
+    if (typeof RC.getMarketplaceItems !== "function") {
+      RC.getMarketplaceItems = () => [];
+    }
 
-    /* SIDEBAR */
-    document.getElementById("hamburger").onclick = () => {
-      document.getElementById("hamburger").classList.toggle("active");
-      document.getElementById("sidebar").classList.toggle("open");
-    };
-
-    /* ITEM RENDER */
-    function renderItem() {
+    /* ---------------------------------------------------
+       LOAD ITEM
+    --------------------------------------------------- */
+    function loadItem() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get("id");
+
       const items = RC.getMarketplaceItems();
       const item = items.find(i => i.id === id);
 
-      const el = document.getElementById("itemContainer");
+      const headerEl = document.getElementById("itemHeader");
+      const detailsEl = document.getElementById("itemDetails");
+      const sellerEl = document.getElementById("sellerCard");
 
       if (!item) {
-        el.innerHTML = "<p style='opacity:0.7;'>Item not found.</p>";
+        headerEl.innerHTML = "<p class='rc-muted'>Item not found.</p>";
         return;
       }
 
-      el.innerHTML = `
+      /* ------------------------------
+         HEADER
+      ------------------------------ */
+      headerEl.innerHTML = `
+        <h2>${item.title}</h2>
+        <div class="rc-muted">${item.discipline || "Unlabeled"}</div>
+      `;
+
+      /* ------------------------------
+         DETAILS
+      ------------------------------ */
+      detailsEl.innerHTML = `
         <div style="display:flex;gap:24px;flex-wrap:wrap;">
+          
           <div style="flex:1;min-width:260px;">
-            <div style="width:100%;height:260px;border-radius:14px;overflow:hidden;background:rgba(255,255,255,0.1);margin-bottom:20px;">
+            <div style="
+              width:100%;
+              height:260px;
+              border-radius:14px;
+              overflow:hidden;
+              background:rgba(255,255,255,0.06);
+              margin-bottom:20px;">
               ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;">` : ""}
             </div>
           </div>
 
           <div style="flex:2;min-width:260px;">
-            <h1 class="section-title">${item.title}</h1>
-            <p style="opacity:0.8;">${item.discipline || "Unlabeled"}</p>
+            <p class="rc-muted">${item.discipline || "Unlabeled"}</p>
             <p style="font-size:1.4rem;margin:10px 0;">$${item.price}</p>
 
-            ${item.donateToGiveaway ? `<span class="tag-pill tag-green">Donated to Giveaway</span><br><br>` : ""}
+            ${item.donateToGiveaway ? `<div class="rc-chip">Donated to Giveaway</div>` : ""}
 
-            <p style="opacity:0.8;margin-bottom:20px;">${item.description || ""}</p>
+            <p style="margin-top:20px;">${item.description || "No description provided."}</p>
 
-            <a href="chatrooms.html" class="btn-primary">Contact Seller</a>
+            <button class="rc-btn" style="margin-top:20px;" onclick="location.href='chatrooms.html'">
+              Contact Seller
+            </button>
+          </div>
+
+        </div>
+      `;
+
+      /* ------------------------------
+         SELLER SNAPSHOT
+      ------------------------------ */
+      const profile = RC.getProfile() || {};
+
+      sellerEl.innerHTML = `
+        <h3>Seller</h3>
+        <div style="display:flex;align-items:center;gap:14px;margin-top:10px;">
+          <div class="profile-avatar" style="width:60px;height:60px;">
+            <img src="${profile.avatarUrl || 'https://via.placeholder.com/80x80?text=Skater'}">
+          </div>
+          <div>
+            <strong>${profile.name || "Unnamed Skater"}</strong><br>
+            <span class="rc-muted">@${profile.username || "unknown"}</span>
           </div>
         </div>
       `;
+
+      /* ------------------------------
+         RELATED ITEMS
+      ------------------------------ */
+      renderRelated(items, item);
     }
 
-    renderItem();
+    /* ---------------------------------------------------
+       RELATED ITEMS
+    --------------------------------------------------- */
+    function renderRelated(allItems, currentItem) {
+      const relatedEl = document.getElementById("relatedGrid");
+
+      const related = allItems
+        .filter(i => i.id !== currentItem.id && i.discipline === currentItem.discipline)
+        .slice(0, 4);
+
+      if (!related.length) {
+        relatedEl.innerHTML = "<p class='rc-muted'>No related items found.</p>";
+        return;
+      }
+
+      relatedEl.innerHTML = related.map(item => `
+        <div class="rc-market-item">
+          <div style="width:100%;height:140px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.06);margin-bottom:10px;">
+            ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;">` : ""}
+          </div>
+          <div class="rc-market-item-title">${item.title}</div>
+          <div class="rc-muted">${item.discipline}</div>
+          <div class="rc-market-item-price">$${item.price}</div>
+          <button class="rc-btn" style="margin-top:10px;"
+            onclick="location.href='marketplace-item.html?id=${encodeURIComponent(item.id)}'">
+            View
+          </button>
+        </div>
+      `).join("");
+    }
+
+    /* INIT */
+    loadItem();
   </script>
 
 </body>
