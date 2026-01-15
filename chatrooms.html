@@ -4,64 +4,106 @@
   <meta charset="UTF-8">
   <title>Chatrooms — Roll ’n Connect</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="rc_style.css">
+  <link rel="stylesheet" href="rc_global.css">
   <style>
-    .chat-layout {
-      display:grid;
-      grid-template-columns:260px minmax(0,1fr);
-      gap:24px;
+    .rc-chat-layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 16px;
     }
-    @media(max-width:900px){
-      .chat-layout{grid-template-columns:1fr;}
+    @media (max-width: 900px) {
+      .rc-chat-layout {
+        grid-template-columns: 1fr;
+      }
     }
-    .chat-room-list {
-      max-height:600px;
-      overflow-y:auto;
+    .rc-chat-room-list {
+      max-height: 600px;
+      overflow-y: auto;
     }
-    .chat-room-item {
-      padding:10px 12px;
-      border-radius:12px;
-      margin-bottom:8px;
-      background:rgba(255,255,255,0.06);
-      cursor:pointer;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
+    .rc-chat-room-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      background: rgba(255,255,255,0.06);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
     }
-    .chat-room-item.active {
-      background:rgba(79,195,255,0.18);
-      box-shadow:0 0 18px rgba(79,195,255,0.7);
+    .rc-chat-room-item.active {
+      background: rgba(0,234,255,0.18);
+      box-shadow: 0 0 18px rgba(0,234,255,0.7);
     }
-    .chat-main {
-      display:flex;
-      flex-direction:column;
-      height:600px;
+    .rc-chat-main {
+      display: flex;
+      flex-direction: column;
+      height: 600px;
     }
-    .chat-messages {
-      flex:1;
-      overflow-y:auto;
-      padding:12px;
-      border-radius:16px;
-      background:rgba(0,0,0,0.6);
-      margin-bottom:12px;
+    .rc-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,0.6);
+      margin-bottom: 12px;
     }
-    .chat-message {
-      margin-bottom:10px;
-      padding:8px 10px;
-      border-radius:10px;
-      background:rgba(255,255,255,0.08);
-      max-width:80%;
+    .rc-chat-message {
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      max-width: 80%;
+      font-size: 13px;
     }
-    .chat-message.me {
-      margin-left:auto;
-      background:rgba(79,195,255,0.18);
+    .rc-chat-message.me {
+      margin-left: auto;
+      background: rgba(0,234,255,0.18);
     }
-    .chat-input-row {
-      display:flex;
-      gap:8px;
+    .rc-chat-message-header {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 2px;
     }
-    .chat-input-row input {
-      flex:1;
+    .rc-chat-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .rc-chat-input-row input {
+      flex: 1;
+    }
+    .rc-emoji-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: transparent;
+      color: var(--rc-text);
+      font-size: 16px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+    }
+    .rc-voice-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(0,234,255,0.7);
+      background: rgba(0,234,255,0.15);
+      color: var(--rc-text);
+      font-size: 13px;
+      padding: 0 10px;
+      height: 34px;
+      cursor: pointer;
+    }
+    .rc-voice-btn.recording {
+      background: rgba(255,0,80,0.3);
+      border-color: rgba(255,0,80,0.8);
+    }
+    .rc-chat-presence {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+    .rc-chat-profile-hover {
+      text-decoration: underline;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -72,93 +114,174 @@
   <div class="stars2"></div>
   <div class="stars3"></div>
 
-  <div class="rc-loading-overlay" id="loadingScreen">
-    <div class="rc-loading-track">
-      <div class="rc-longboard"></div>
-      <div class="rc-rollerskate"></div>
-    </div>
-    <div class="rc-loading-text">Connecting to chat…</div>
-  </div>
+  <div class="rc-app">
 
-  <div class="hamburger" id="hamburger">
-    <span></span><span></span><span></span>
-  </div>
+    <!-- SIDEBAR -->
+    <aside class="rc-sidebar">
+      <div class="rc-logo">Roll ’n Connect</div>
 
-  <div class="sidebar" id="sidebar">
-    <h2>Menu</h2>
-    <a href="index.html">Home</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="events.html">Events</a>
-    <a href="find-spots.html">Find Spots</a>
-    <a href="chatrooms.html">Chatrooms</a>
-    <a href="profile.html">Your Profile</a>
-    <a href="profile-edit.html">Edit Profile</a>
-  </div>
+      <nav class="rc-nav">
+        <button onclick="location.href='dashboard.html'">Dashboard</button>
+        <button onclick="location.href='events.html'">Events</button>
+        <button onclick="location.href='find-spots.html'">Find Spots</button>
+        <button class="rc-active">Chatrooms</button>
+        <button onclick="location.href='profile.html'">Your Profile</button>
+        <button onclick="location.href='profile-edit.html'">Edit Profile</button>
+        <button onclick="location.href='marketplace.html'">Marketplace</button>
+      </nav>
+    </aside>
 
-  <div class="wrapper">
-    <div class="glass" style="padding:32px;margin-bottom:24px;">
-      <h1 class="section-title">Chatrooms</h1>
-      <p style="opacity:0.8;">Built to hold a lot of skaters. Rooms, presence, and real‑time sessions—Render‑ready.</p>
-    </div>
+    <!-- MAIN -->
+    <main class="rc-content">
 
-    <div class="chat-layout">
-      <!-- ROOMS -->
-      <div class="glass">
-        <div class="flex-between" style="margin-bottom:10px;">
-          <h2 class="section-title" style="font-size:1.4rem;">Rooms</h2>
-          <button class="btn-primary" id="newRoomBtn">+ New Room</button>
-        </div>
-        <div id="roomList" class="chat-room-list"></div>
-      </div>
+      <section class="rc-section rc-active">
 
-      <!-- CHAT -->
-      <div class="glass chat-main">
-        <div class="flex-between" style="margin-bottom:8px;">
-          <div id="activeRoomName" class="section-title" style="font-size:1.4rem;">Select a room</div>
-          <div id="roomPresence" style="opacity:0.7;font-size:0.85rem;">0 online</div>
+        <!-- HEADER -->
+        <div class="rc-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <h2>Chatrooms</h2>
+              <p class="rc-muted">Discipline rooms, private circles, text, emojis, and voice—ready for real‑time wiring.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="profile-avatar" style="width:44px;height:44px;">
+                <img id="profileAvatarMini" alt="Profile avatar">
+              </div>
+              <div>
+                <div id="profileNameMini" style="font-size:14px;font-weight:600;"></div>
+                <div id="profileUsernameMini" class="rc-muted" style="font-size:12px;"></div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div id="messages" class="chat-messages"></div>
+        <!-- LAYOUT -->
+        <div class="rc-chat-layout">
 
-        <div class="chat-input-row">
-          <input id="messageInput" class="glass-input" placeholder="Type a message…" disabled>
-          <button class="btn-primary" id="sendBtn" disabled>Send</button>
+          <!-- ROOMS -->
+          <div class="rc-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+              <h3>Rooms</h3>
+              <button class="rc-btn" id="newRoomBtn">+ Private Room</button>
+            </div>
+            <div class="rc-muted" style="font-size:12px;margin-bottom:8px;">
+              Public discipline rooms + your own private circles.
+            </div>
+            <div id="roomList" class="rc-chat-room-list"></div>
+          </div>
+
+          <!-- CHAT -->
+          <div class="rc-card rc-chat-main">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <div>
+                <div id="activeRoomName" style="font-size:1.1rem;font-weight:600;">Select a room</div>
+                <div id="activeRoomDiscipline" class="rc-muted" style="font-size:12px;"></div>
+              </div>
+              <div id="roomPresence" class="rc-chat-presence">0 online</div>
+            </div>
+
+            <div id="messages" class="rc-chat-messages"></div>
+
+            <div class="rc-chat-input-row">
+              <button class="rc-emoji-btn" id="emojiBtn">😊</button>
+              <input id="messageInput" class="rc-field-input" placeholder="Type a message…" disabled>
+              <button class="rc-voice-btn" id="voiceBtn" disabled>Voice</button>
+              <button class="rc-btn" id="sendBtn" disabled>Send</button>
+            </div>
+          </div>
+
         </div>
-      </div>
-    </div>
+
+      </section>
+
+    </main>
+
   </div>
 
   <script src="rc_core.js"></script>
 
   <script>
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        const ls = document.getElementById("loadingScreen");
-        ls.style.opacity = "0";
-        setTimeout(() => ls.remove(), 600);
-      }, 600);
-    });
+    // ---------- USER + CORE HELPERS ----------
+    if (typeof RC.uuid !== "function") {
+      RC.uuid = function () {
+        return "rc-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      };
+    }
 
-    document.getElementById("hamburger").onclick = () => {
-      document.getElementById("hamburger").classList.toggle("active");
-      document.getElementById("sidebar").classList.toggle("open");
-    };
+    if (typeof RC.getUserId !== "function") {
+      RC.getUserId = function () {
+        let id = localStorage.getItem("rc_user_id");
+        if (!id) {
+          id = RC.uuid();
+          localStorage.setItem("rc_user_id", id);
+        }
+        return id;
+      };
+    }
 
-    const user = RC.getProfile();
+    if (typeof RC.getChatState !== "function") {
+      RC.getChatState = function () {
+        try {
+          return JSON.parse(localStorage.getItem("rc_chat_state") || "{}");
+        } catch (e) {
+          return {};
+        }
+      };
+    }
+
+    if (typeof RC.saveChatState !== "function") {
+      RC.saveChatState = function (state) {
+        localStorage.setItem("rc_chat_state", JSON.stringify(state || {}));
+      };
+    }
+
+    const profile = RC.getProfile ? RC.getProfile() || {} : {};
     const userId = RC.getUserId();
-    const username = user.username || ("skater_" + userId.slice(-4));
+    const username = profile.username || ("skater_" + userId.slice(-4));
 
+    // ---------- PROFILE SNAPSHOT ----------
+    (function renderProfileMini() {
+      const nameEl = document.getElementById("profileNameMini");
+      const userEl = document.getElementById("profileUsernameMini");
+      const avatarEl = document.getElementById("profileAvatarMini");
+
+      nameEl.textContent = profile.name || "Unnamed Skater";
+      userEl.textContent = profile.username ? "@" + profile.username : "@unknown";
+      avatarEl.src = profile.avatarUrl || "https://via.placeholder.com/80x80?text=Skater";
+    })();
+
+    // ---------- CHAT STATE ----------
     const chatState = {
-      rooms: [],      // { id, name, createdAt }
-      messages: {},   // roomId -> [ { id, userId, username, text, ts } ]
+      rooms: [],      // { id, name, discipline, type: "public"|"private" }
+      messages: {},   // roomId -> [ { id, userId, username, text, type, ts } ]
       activeRoomId: null
     };
 
+    function initDefaultRooms() {
+      const baseRooms = [
+        { name: "Dance Floor", discipline: "dance" },
+        { name: "Jam Circle", discipline: "jam" },
+        { name: "Aggressive Line", discipline: "aggressive" },
+        { name: "Speed Track", discipline: "speed" },
+        { name: "Artistic Flow", discipline: "artistic" },
+        { name: "General Rink", discipline: "general" }
+      ];
+      chatState.rooms = baseRooms.map(r => ({
+        id: "room_" + r.discipline,
+        name: r.name,
+        discipline: r.discipline,
+        type: "public"
+      }));
+      chatState.messages = {};
+    }
+
     function loadChatState() {
       const data = RC.getChatState();
-      if (data) {
-        chatState.rooms = data.rooms || [];
+      if (data && data.rooms && data.rooms.length) {
+        chatState.rooms = data.rooms;
         chatState.messages = data.messages || {};
+      } else {
+        initDefaultRooms();
       }
     }
 
@@ -169,20 +292,22 @@
       });
     }
 
+    // ---------- RENDER ROOMS ----------
     function renderRooms() {
       const el = document.getElementById("roomList");
       if (!chatState.rooms.length) {
-        el.innerHTML = "<p style='opacity:0.7;'>No rooms yet. Create one.</p>";
+        el.innerHTML = "<p class='rc-muted'>No rooms yet.</p>";
         return;
       }
+
       el.innerHTML = chatState.rooms.map(r => `
-        <div class="chat-room-item ${r.id === chatState.activeRoomId ? "active" : ""}" data-room-id="${r.id}">
+        <div class="rc-chat-room-item ${r.id === chatState.activeRoomId ? "active" : ""}" data-room-id="${r.id}">
           <span>${r.name}</span>
-          <span style="opacity:0.7;font-size:0.8rem;">Room</span>
+          <span class="rc-muted" style="font-size:11px;">${r.type === "public" ? r.discipline : "private"}</span>
         </div>
       `).join("");
 
-      el.querySelectorAll(".chat-room-item").forEach(item => {
+      el.querySelectorAll(".rc-chat-room-item").forEach(item => {
         item.onclick = () => {
           chatState.activeRoomId = item.dataset.roomId;
           renderRooms();
@@ -191,40 +316,56 @@
       });
     }
 
+    // ---------- RENDER ACTIVE ROOM ----------
     function renderActiveRoom() {
       const nameEl = document.getElementById("activeRoomName");
+      const discEl = document.getElementById("activeRoomDiscipline");
       const presenceEl = document.getElementById("roomPresence");
       const msgEl = document.getElementById("messages");
       const input = document.getElementById("messageInput");
       const sendBtn = document.getElementById("sendBtn");
+      const voiceBtn = document.getElementById("voiceBtn");
 
       if (!chatState.activeRoomId) {
         nameEl.textContent = "Select a room";
+        discEl.textContent = "";
         presenceEl.textContent = "0 online";
         msgEl.innerHTML = "";
         input.disabled = true;
         sendBtn.disabled = true;
+        voiceBtn.disabled = true;
         return;
       }
 
       const room = chatState.rooms.find(r => r.id === chatState.activeRoomId);
       nameEl.textContent = room ? room.name : "Room";
-      presenceEl.textContent = "Many skaters can join here"; // placeholder for real presence
+      discEl.textContent = room ? (room.type === "public" ? room.discipline + " • public" : "Private circle") : "";
+      presenceEl.textContent = "Many skaters can join here"; // placeholder until real presence
 
       input.disabled = false;
       sendBtn.disabled = false;
+      voiceBtn.disabled = false;
 
       const msgs = chatState.messages[chatState.activeRoomId] || [];
-      msgEl.innerHTML = msgs.map(m => `
-        <div class="chat-message ${m.userId === userId ? "me" : ""}">
-          <div style="font-size:0.8rem;opacity:0.8;">${m.username}</div>
-          <div>${m.text}</div>
-        </div>
-      `).join("");
+      msgEl.innerHTML = msgs.map(m => {
+        const isMe = m.userId === userId;
+        const content = m.type === "voice"
+          ? `<audio controls src="${m.text}" style="width:100%;"></audio>`
+          : m.text;
+        return `
+          <div class="rc-chat-message ${isMe ? "me" : ""}">
+            <div class="rc-chat-message-header">
+              <span class="rc-chat-profile-hover" onclick="openProfile('${m.userId}')">${m.username}</span>
+            </div>
+            <div>${content}</div>
+          </div>
+        `;
+      }).join("");
 
       msgEl.scrollTop = msgEl.scrollHeight;
     }
 
+    // ---------- TEXT MESSAGE ----------
     function sendMessage() {
       if (!chatState.activeRoomId) return;
       const input = document.getElementById("messageInput");
@@ -239,6 +380,7 @@
         userId,
         username,
         text,
+        type: "text",
         ts: Date.now()
       });
 
@@ -246,15 +388,88 @@
       input.value = "";
       renderActiveRoom();
 
-      // Here is where your Render-backed signaling/WebRTC broadcast would go.
-      // e.g. send over WebSocket/DataChannel to other clients.
+      // TODO: send this message over your WebSocket/WebRTC signaling channel
     }
 
+    // ---------- EMOJI ----------
+    document.getElementById("emojiBtn").onclick = () => {
+      const input = document.getElementById("messageInput");
+      input.value += " 😊";
+      input.focus();
+    };
+
+    // ---------- VOICE MESSAGE (LOCAL RECORDING) ----------
+    let mediaRecorder = null;
+    let chunks = [];
+    let isRecording = false;
+
+    async function toggleVoiceRecording() {
+      const voiceBtn = document.getElementById("voiceBtn");
+
+      if (!isRecording) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          chunks = [];
+
+          mediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) chunks.push(e.data);
+          };
+
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(chunks, { type: "audio/webm" });
+            const url = URL.createObjectURL(blob);
+            sendVoiceMessage(url);
+          };
+
+          mediaRecorder.start();
+          isRecording = true;
+          voiceBtn.classList.add("recording");
+          voiceBtn.textContent = "Stop";
+        } catch (err) {
+          console.error("Mic error:", err);
+        }
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        voiceBtn.classList.remove("recording");
+        voiceBtn.textContent = "Voice";
+      }
+    }
+
+    function sendVoiceMessage(url) {
+      if (!chatState.activeRoomId) return;
+      const roomId = chatState.activeRoomId;
+      if (!chatState.messages[roomId]) chatState.messages[roomId] = [];
+
+      chatState.messages[roomId].push({
+        id: "msg_" + Date.now(),
+        userId,
+        username,
+        text: url,
+        type: "voice",
+        ts: Date.now()
+      });
+
+      saveChatState();
+      renderActiveRoom();
+
+      // TODO: send this voice URL or blob reference via your signaling/backend
+    }
+
+    document.getElementById("voiceBtn").onclick = toggleVoiceRecording;
+
+    // ---------- PRIVATE ROOM ----------
     function createRoom() {
-      const name = prompt("Room name?");
+      const name = prompt("Private room name?");
       if (!name) return;
-      const id = "room_" + Date.now();
-      chatState.rooms.push({ id, name, createdAt: Date.now() });
+      const id = "room_" + RC.uuid();
+      chatState.rooms.push({
+        id,
+        name,
+        discipline: "private",
+        type: "private"
+      });
       if (!chatState.messages[id]) chatState.messages[id] = [];
       chatState.activeRoomId = id;
       saveChatState();
@@ -262,12 +477,22 @@
       renderActiveRoom();
     }
 
+    // ---------- PROFILE HOVER / LINK ----------
+    function openProfile(userIdClicked) {
+      // For now, just go to your own profile.
+      // Later: map userId -> profile page or public profile view.
+      location.href = "profile.html";
+    }
+    window.openProfile = openProfile;
+
+    // ---------- EVENTS ----------
     document.getElementById("sendBtn").onclick = sendMessage;
     document.getElementById("messageInput").addEventListener("keydown", e => {
       if (e.key === "Enter") sendMessage();
     });
     document.getElementById("newRoomBtn").onclick = createRoom;
 
+    // ---------- INIT ----------
     loadChatState();
     renderRooms();
     renderActiveRoom();
