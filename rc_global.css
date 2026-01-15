@@ -1,0 +1,292 @@
+/* ============================================================
+   Roll ’n Connect — Global Stylesheet
+   Architect: Clayvonte
+   Purpose: Universal layout, components, typography, utilities
+   ============================================================ */
+
+/* ---------- ROOT THEME ---------- */
+
+:root {
+    --rc-bg: #050814;
+    --rc-bg-alt: #0b1022;
+    --rc-surface: rgba(10, 16, 35, 0.85);
+
+    --rc-primary: #00eaff;
+    --rc-accent: #ff00c8;
+    --rc-success: #00ff9d;
+    --rc-danger: #ff4f6d;
+
+    --rc-text: #f5f7ff;
+    --rc-muted: #8b90aa;
+
+    --rc-border: rgba(255, 255, 255, 0.08);
+    --rc-radius: 14px;
+    --rc-shadow: 0 0 25px rgba(0, 234, 255, 0.25);
+
+    --rc-transition: 0.25s ease;
+}
+
+/* ---------- RESET ---------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: radial-gradient(circle at top, #151b3a 0, #050814 55%, #02030a 100%);
+    color: var(--rc-text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+}
+
+/* ---------- APP LAYOUT ---------- */
+
+.rc-app {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Sidebar */
+
+.rc-sidebar {
+    width: 260px;
+    background: linear-gradient(160deg, #050814, #0b1022);
+    border-right: 1px solid var(--rc-border);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rc-logo {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--rc-primary);
+}
+
+/* Navigation */
+
+.rc-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rc-nav button {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--rc-muted);
+    text-align: left;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--rc-transition);
+}
+
+.rc-nav button:hover {
+    background: rgba(0, 234, 255, 0.08);
+    color: var(--rc-text);
+}
+
+.rc-nav button.rc-active {
+    background: rgba(0, 234, 255, 0.16);
+    border-color: rgba(0, 234, 255, 0.6);
+    color: var(--rc-primary);
+}
+
+/* ---------- CONTENT AREA ---------- */
+
+.rc-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.rc-section {
+    display: none;
+    animation: fadeIn 0.25s ease;
+}
+
+.rc-section.rc-active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- HEADINGS ---------- */
+
+.rc-section h2 {
+    margin-top: 0;
+    font-size: 22px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--rc-primary);
+}
+
+/* ---------- CARDS ---------- */
+
+.rc-card {
+    background: var(--rc-surface);
+    border-radius: var(--rc-radius);
+    border: 1px solid var(--rc-border);
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: var(--rc-shadow);
+}
+
+.rc-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rc-card-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* ---------- FORMS ---------- */
+
+.rc-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 480px;
+}
+
+.rc-field label {
+    font-size: 12px;
+    color: var(--rc-muted);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.rc-field input,
+.rc-field textarea,
+.rc-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--rc-border);
+    background: rgba(3, 6, 18, 0.9);
+    color: var(--rc-text);
+    font-size: 14px;
+    outline: none;
+    transition: var(--rc-transition);
+}
+
+.rc-field input:focus,
+.rc-field textarea:focus,
+.rc-field select:focus {
+    border-color: var(--rc-primary);
+    box-shadow: 0 0 0 1px rgba(0, 234, 255, 0.4);
+}
+
+/* ---------- BUTTONS ---------- */
+
+.rc-btn {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--rc-primary);
+    background: rgba(0, 234, 255, 0.15);
+    color: var(--rc-text);
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--rc-transition);
+}
+
+.rc-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--rc-shadow);
+}
+
+.rc-btn-secondary {
+    border-color: var(--rc-border);
+    background: transparent;
+}
+
+/* ---------- MARKETPLACE ---------- */
+
+.rc-market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.rc-market-item {
+    background: var(--rc-surface);
+    border-radius: var(--rc-radius);
+    border: 1px solid var(--rc-border);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rc-market-item-title {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.rc-market-item-price {
+    font-size: 14px;
+    color: var(--rc-primary);
+}
+
+/* ---------- CHATROOMS ---------- */
+
+.rc-chat {
+    display: flex;
+    height: calc(100vh - 120px);
+    border-radius: var(--rc-radius);
+    overflow: hidden;
+    border: 1px solid var(--rc-border);
+}
+
+.rc-chat-users {
+    width: 220px;
+    background: var(--rc-bg-alt);
+    border-right: 1px solid var(--rc-border);
+    padding: 12px;
+    overflow-y: auto;
+}
+
+.rc-chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+
+.rc-chat-input {
+    display: flex;
+    padding: 12px;
+    border-top: 1px solid var(--rc-border);
+    background: var(--rc-bg-alt);
+}
+
+.rc-chat-input input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--rc-border);
+    background: rgba(3, 6, 18, 0.9);
+    color: var(--rc-text);
+}
+
+/* ---------- UTILITIES ---------- */
+
+.rc-hidden { display: none !important; }
+.rc-flex { display: flex; }
+.rc-center { display: flex; align-items: center; justify-content: center; }
