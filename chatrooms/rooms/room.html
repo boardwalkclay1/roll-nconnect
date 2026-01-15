@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatroom – Roll ’n Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../../rc_global.css">
+</head>
+
+<body>
+
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="rc-app">
+
+    <aside class="rc-sidebar">
+      <div class="rc-logo">Roll ’n Connect</div>
+      <nav class="rc-nav">
+        <button onclick="history.back()">← Back</button>
+        <button onclick="location.href='../../chatrooms.html'">Chat Universes</button>
+        <button onclick="location.href='../../profile.html'">Your Profile</button>
+      </nav>
+    </aside>
+
+    <main class="rc-content">
+
+      <section class="rc-section rc-active">
+
+        <div class="rc-card" title="This is the active chatroom. Messages, emojis, and voice live here.">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <h2 id="roomTitle">Chatroom</h2>
+              <div id="roomMeta" class="rc-muted" style="font-size:12px;"></div>
+            </div>
+            <div id="presence" class="rc-muted" style="font-size:12px;">
+              Many skaters can join here.
+            </div>
+          </div>
+        </div>
+
+        <div class="rc-card rc-chat-main" title="Scroll to see messages. New messages appear at the bottom.">
+          <div id="messages" class="rc-chat-messages"></div>
+
+          <div class="rc-chat-input-row" title="Type, add emojis, or record a voice message.">
+            <button class="rc-emoji-btn" id="emojiBtn">😊</button>
+            <input id="messageInput" class="rc-field-input" placeholder="Type a message…">
+            <button class="rc-voice-btn" id="voiceBtn">Voice</button>
+            <button class="rc-btn" id="sendBtn">Send</button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="../../rc_core.js"></script>
+  <script src="../../js/rc_chatrooms_config.js"></script>
+  <script src="../../js/rc_chat_engine.js"></script>
+
+</body>
+</html>
