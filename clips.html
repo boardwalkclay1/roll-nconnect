@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clips Feed — Roll ’n Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="rc_style.css">
+</head>
+
+<body>
+
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="notifications.html">Notifications</a>
+    <a href="events.html">Events</a>
+    <a href="find-spots.html">Find Spots</a>
+    <a href="chatrooms.html">Chatrooms</a>
+    <a href="clips.html">Clips Feed</a>
+    <a href="profile.html">Your Profile</a>
+    <a href="profile-edit.html">Edit Profile</a>
+    <a href="settings.html">Settings</a>
+  </div>
+
+  <a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
+  <a href="find-spots.html" class="bubble" id="bubbleEvents">Spots</a>
+  <a href="profile.html" class="bubble" id="bubbleDash">Profile</a>
+  <a href="notifications.html" class="bubble" id="bubbleNotif">Alerts</a>
+
+  <div class="wrapper">
+
+    <div class="glass" style="padding:24px;margin-bottom:24px;">
+      <h1 class="glow-white" style="margin-bottom:6px;">Clips Feed</h1>
+      <p style="opacity:0.8;">Scroll the latest skate clips from the community.</p>
+    </div>
+
+    <div class="glass" style="padding:20px;">
+      <div id="clipsFeed"></div>
+    </div>
+
+  </div>
+
+  <script src="rc_core.js"></script>
+  <script src="js/rc_clips_feed.js"></script>
+  <script>
+    document.getElementById("hamburger").onclick = () => {
+      document.getElementById("hamburger").classList.toggle("active");
+      document.getElementById("sidebar").classList.toggle("open");
+    };
+    RC_CLIPS.init();
+  </script>
+
+</body>
+</html>
