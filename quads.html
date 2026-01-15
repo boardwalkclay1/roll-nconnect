@@ -50,4 +50,29 @@
             <h3>Your Rooms</h3>
             <button class="rc-btn" id="createRoomBtn">+ Create Room</button>
           </div>
-          <div class="rc-muted
+          <div class="rc-muted" style="font-size:12px;margin-bottom:8px;">
+            These rooms are created by you and other skaters in this discipline.
+          </div>
+          <div id="userRooms" class="rc-list-grid"></div>
+        </div>
+
+        <div class="rc-card" title="Join live voice rooms to talk in real time.">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3>Live Voice Rooms</h3>
+            <span class="rc-muted" style="font-size:12px;">Join a live voice session.</span>
+          </div>
+          <div id="voiceRooms" class="rc-list-grid"></div>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <script src="../rc_core.js"></script>
+  <script src="../js/rc_chatrooms_config.js"></script>
+  <script src="../js/rc_discipline_loader.js"></script>
+
+</body>
+</html>
