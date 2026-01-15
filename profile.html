@@ -4,203 +4,141 @@
   <meta charset="UTF-8">
   <title>Your Profile — Roll ’n Connect</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="rc_global.css">
+  <link rel="stylesheet" href="rc_style.css">
 </head>
 
 <body>
 
-  <!-- STARFIELD BACKGROUND -->
   <div class="stars1"></div>
   <div class="stars2"></div>
   <div class="stars3"></div>
 
-  <!-- APP LAYOUT -->
-  <div class="rc-app">
+  <div class="rc-loading-overlay" id="loadingScreen">
+    <div class="rc-loading-track">
+      <div class="rc-longboard"></div>
+      <div class="rc-rollerskate"></div>
+    </div>
+    <div class="rc-loading-text">Loading Profile…</div>
+  </div>
 
-    <!-- SIDEBAR -->
-    <aside class="rc-sidebar">
-      <div class="rc-logo">Roll ’n Connect</div>
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
 
-      <nav class="rc-nav">
-        <button onclick="location.href='dashboard.html'">Dashboard</button>
-        <button onclick="location.href='events.html'">Events</button>
-        <button onclick="location.href='find-spots.html'">Find Spots</button>
-        <button onclick="location.href='chatrooms.html'">Chatrooms</button>
-        <button class="rc-active">Your Profile</button>
-        <button onclick="location.href='profile-edit.html'">Edit Profile</button>
-      </nav>
-    </aside>
+  <div class="sidebar" id="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="dashboard.html">Dashboard</a>
+    <a href="notifications.html">Notifications</a>
+    <a href="events.html">Events</a>
+    <a href="find-spots.html">Find Spots</a>
+    <a href="chatrooms.html">Chatrooms</a>
+    <a href="clips.html">Clips Feed</a>
+    <a href="profile.html">Your Profile</a>
+    <a href="profile-edit.html">Edit Profile</a>
+    <a href="settings.html">Settings</a>
+  </div>
 
-    <!-- CONTENT -->
-    <main class="rc-content">
+  <a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
+  <a href="find-spots.html" class="bubble" id="bubbleEvents">Spots</a>
+  <a href="clips.html" class="bubble" id="bubbleDash">Clips</a>
+  <a href="notifications.html" class="bubble" id="bubbleNotif">Alerts</a>
 
-      <!-- PROFILE HEADER -->
-      <section class="rc-section rc-active" id="profileSection">
+  <div class="wrapper">
 
-        <div class="rc-card profile-header">
-          <div class="profile-header-inner">
+    <!-- PROFILE HEADER -->
+    <div class="glass" style="padding:40px;margin-bottom:30px;">
+      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+        <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.1);">
+          <img id="profileAvatar" style="width:100%;height:100%;object-fit:cover;">
+        </div>
 
-            <div class="profile-avatar">
-              <img id="profileAvatar">
-            </div>
+        <div>
+          <h1 id="profileName" class="glow-white" style="margin-bottom:4px;"></h1>
+          <div id="profileUsername" style="opacity:0.8;margin-bottom:6px;"></div>
+          <div id="profileDiscipline" style="opacity:0.8;margin-bottom:10px;"></div>
+          <div id="profileBio" style="opacity:0.8;max-width:600px;"></div>
 
-            <div class="profile-info">
-              <h2 id="profileName"></h2>
-              <div id="profileUsername" class="profile-username"></div>
-              <p id="profileBio" class="profile-bio"></p>
-
-              <div class="profile-actions">
-                <button class="rc-btn" onclick="location.href='profile-edit.html'">Edit Profile</button>
-                <button class="rc-btn-secondary" onclick="location.href='chatrooms.html'">Message</button>
-              </div>
-            </div>
-
+          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="profile-edit.html" class="btn-primary">Edit Profile</a>
+            <a href="chatrooms.html" class="btn-ghost">Message</a>
+            <a href="settings.html" class="btn-ghost">Settings</a>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- PROFILE CLIP -->
-        <div class="rc-card">
-          <h3>Profile Clip</h3>
-          <div id="profileClipContainer"></div>
+    <!-- TABS: POSTS / CLIPS / LESSONS -->
+    <div class="glass" style="margin-bottom:30px;">
+      <div class="tab-row">
+        <button class="tab-btn tab-active" data-tab="posts">Posts</button>
+        <button class="tab-btn" data-tab="clips">Clips</button>
+        <button class="tab-btn" data-tab="lessons">Lessons</button>
+      </div>
+
+      <div id="tab-posts" class="tab-panel tab-panel-active">
+        <div id="postsFeed"></div>
+      </div>
+
+      <div id="tab-clips" class="tab-panel">
+        <div id="clipsFeed"></div>
+      </div>
+
+      <div id="tab-lessons" class="tab-panel">
+        <div id="lessonsList"></div>
+        <div style="margin-top:12px;">
+          <a href="lessons.html" class="btn-primary">Browse Lessons Marketplace</a>
         </div>
+      </div>
+    </div>
 
-        <!-- GRID: LESSONS + CLIPS -->
-        <div class="grid-2">
+    <!-- PROFILE CLIP FEATURED -->
+    <div class="glass" style="margin-bottom:30px;">
+      <h2 class="section-title">Profile Clip</h2>
+      <div id="profileClipContainer"></div>
+    </div>
 
-          <!-- LESSONS -->
-          <div class="rc-card">
-            <h3>Lessons</h3>
-            <div id="lessonsList"></div>
-          </div>
-
-          <!-- CLIPS -->
-          <div class="rc-card">
-            <h3>Clips</h3>
-            <div id="clipsList"></div>
-          </div>
-
-        </div>
-
-        <!-- MINI CALENDAR -->
-        <div class="rc-card">
-          <h3>Upcoming Sessions</h3>
-          <div id="miniCalendar"></div>
-          <button class="rc-btn" style="margin-top:12px;" onclick="location.href='calendar.html'">
-            Open Calendar
-          </button>
-        </div>
-
-      </section>
-
-    </main>
+    <!-- MINI CALENDAR + UPCOMING SESSIONS -->
+    <div class="glass" style="margin-bottom:40px;">
+      <h2 class="section-title">Upcoming Sessions</h2>
+      <div id="miniCalendar"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="calendar.html" class="btn-primary">Open Full Calendar</a>
+        <button class="btn-ghost" id="addCalendarItemBtn">Add Session</button>
+      </div>
+    </div>
 
   </div>
 
   <script src="rc_core.js"></script>
+  <script src="js/rc_profile_engine.js"></script>
 
   <script>
-    /* -----------------------------
-       PROFILE RENDERING
-    ------------------------------*/
-    function renderProfile() {
-      const p = RC.getProfile();
+    window.addEventListener("load", () => {
+      setTimeout(() => {
+        const ls = document.getElementById("loadingScreen");
+        ls.style.opacity = "0";
+        setTimeout(() => ls.remove(), 600);
+      }, 600);
+    });
 
-      document.getElementById("profileName").textContent = p.name || "Unnamed Skater";
-      document.getElementById("profileUsername").textContent = "@" + (p.username || "unknown");
-      document.getElementById("profileBio").textContent = p.bio || "";
+    document.getElementById("hamburger").onclick = () => {
+      document.getElementById("hamburger").classList.toggle("active");
+      document.getElementById("sidebar").classList.toggle("open");
+    };
 
-      if (p.avatarUrl) {
-        document.getElementById("profileAvatar").src = p.avatarUrl;
-      }
-    }
+    // Tabs
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("tab-active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("tab-panel-active"));
+        btn.classList.add("tab-active");
+        document.getElementById("tab-" + btn.dataset.tab).classList.add("tab-panel-active");
+      });
+    });
 
-    /* -----------------------------
-       PROFILE CLIP
-    ------------------------------*/
-    function renderProfileClip() {
-      const p = RC.getProfile();
-      const el = document.getElementById("profileClipContainer");
-
-      if (!p.profileClipUrl) {
-        el.innerHTML = "<p class='rc-muted'>No profile clip uploaded.</p>";
-        return;
-      }
-
-      el.innerHTML = `
-        <video src="${p.profileClipUrl}" controls class="profile-video"></video>
-      `;
-    }
-
-    /* -----------------------------
-       LESSONS
-    ------------------------------*/
-    function renderLessons() {
-      const lessons = RC.getLessons();
-      const el = document.getElementById("lessonsList");
-
-      if (!lessons.length) {
-        el.innerHTML = "<p class='rc-muted'>No lessons added.</p>";
-        return;
-      }
-
-      el.innerHTML = lessons.map(ls => `
-        <div class="rc-card">
-          <strong>${ls.title}</strong><br>
-          ${(ls.price ? "$" + ls.price : "Free")} • ${ls.duration} min<br>
-          <span class="rc-muted">${ls.description}</span>
-        </div>
-      `).join("");
-    }
-
-    /* -----------------------------
-       CLIPS
-    ------------------------------*/
-    function renderClips() {
-      const clips = RC.getClips();
-      const el = document.getElementById("clipsList");
-
-      if (!clips.length) {
-        el.innerHTML = "<p class='rc-muted'>No clips uploaded.</p>";
-        return;
-      }
-
-      el.innerHTML = clips.map(url => `
-        <video src="${url}" controls class="profile-video"></video>
-      `).join("");
-    }
-
-    /* -----------------------------
-       MINI CALENDAR
-    ------------------------------*/
-    function renderMiniCalendar() {
-      const events = RC.getCalendarItems();
-      const el = document.getElementById("miniCalendar");
-
-      if (!events.length) {
-        el.innerHTML = "<p class='rc-muted'>No upcoming sessions.</p>";
-        return;
-      }
-
-      const upcoming = events
-        .slice()
-        .sort((a,b)=> new Date(a.date) - new Date(b.date))
-        .slice(0,5);
-
-      el.innerHTML = upcoming.map(ev => `
-        <div class="rc-card">
-          <strong>${ev.title || "Untitled"}</strong><br>
-          <span class="rc-muted">${ev.date} • ${ev.time || ""}</span><br>
-          <span class="rc-muted">${ev.location || ""}</span>
-        </div>
-      `).join("");
-    }
-
-    /* INIT */
-    renderProfile();
-    renderProfileClip();
-    renderLessons();
-    renderClips();
-    renderMiniCalendar();
+    // Init profile engine
+    RC_PROFILE.init();
   </script>
 
 </body>
