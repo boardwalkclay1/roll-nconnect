@@ -5,6 +5,83 @@
   <title>Chat Universes – Roll ’n Connect</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="rc_global.css">
+
+  <style>
+    /* --- Cosmic Black Theme --- */
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    h1, h2 {
+      text-shadow: 0 0 12px rgba(255,255,255,0.8);
+    }
+
+    .rc-card {
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 0 18px rgba(255,255,255,0.08);
+      backdrop-filter: blur(6px);
+      transition: 0.25s ease;
+      border-radius: 14px;
+      padding: 22px;
+    }
+
+    .rc-hover-card:hover {
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 0 25px rgba(255,255,255,0.25);
+      border-color: rgba(255,255,255,0.35);
+      cursor: pointer;
+    }
+
+    .rc-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      margin-top: 20px;
+    }
+
+    .rc-sidebar {
+      background: rgba(0,0,0,0.7);
+      border-right: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 4px 0 20px rgba(255,255,255,0.05);
+    }
+
+    .rc-nav button {
+      background: transparent;
+      border: none;
+      color: #fff;
+      padding: 12px 18px;
+      text-align: left;
+      width: 100%;
+      font-size: 15px;
+      transition: 0.2s ease;
+    }
+
+    .rc-nav button:hover {
+      background: rgba(255,255,255,0.08);
+      text-shadow: 0 0 8px rgba(255,255,255,0.7);
+    }
+
+    .rc-active {
+      background: rgba(255,255,255,0.12) !important;
+      font-weight: 600;
+      text-shadow: 0 0 10px rgba(255,255,255,0.9);
+    }
+
+    /* Stars already exist in your CSS, but we intensify them */
+    .stars1, .stars2, .stars3 {
+      opacity: 0.9;
+      filter: drop-shadow(0 0 3px white);
+    }
+
+    .rc-muted {
+      opacity: 0.8;
+    }
+
+  </style>
 </head>
 
 <body>
@@ -16,7 +93,7 @@
 <div class="rc-app">
 
   <aside class="rc-sidebar">
-    <div class="rc-logo">Roll ’n Connect</div>
+    <div class="rc-logo" style="text-shadow:0 0 12px white;">Roll ’n Connect</div>
     <nav class="rc-nav">
       <button onclick="location.href='dashboard.html'">Dashboard</button>
       <button onclick="location.href='events.html'">Events</button>
@@ -33,7 +110,7 @@
     <section class="rc-section rc-active">
 
       <div class="rc-card" title="Choose a discipline to enter its chat universe. Each universe has custom rooms, voice chat, and user-created rooms.">
-        <h1>Chat Universes</h1>
+        <h1 style="font-size:38px; margin-bottom:6px;">Chat Universes</h1>
         <p class="rc-muted">Every discipline has its own world — choose one to enter its chat universe.</p>
       </div>
 
