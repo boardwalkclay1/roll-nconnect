@@ -1,0 +1,22 @@
+{
+  "spotId": "abc123",
+  "name": "Downtown Skatepark",
+  "type": "skatepark",
+  "lat": 33.12345,
+  "lng": -84.12345,
+  "amenities": ["water", "restrooms"],
+  "reviews": [
+    {
+      "userId": "clay",
+      "rating": 5,
+      "text": "Smooth concrete, great flow!",
+      "ts": 1736890000000
+    }
+  ],
+  "checkins": [
+    {
+      "userId": "clay",
+      "ts": 1736891000000
+    }
+  ]
+}
