@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quads Chat – Roll ’n Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../rc_global.css">
+</head>
+
+<body>
+
+  <div class="stars1"></div>
+  <div class="stars2"></div>
+  <div class="stars3"></div>
+
+  <div class="rc-app">
+
+    <aside class="rc-sidebar">
+      <div class="rc-logo">Roll ’n Connect</div>
+      <nav class="rc-nav">
+        <button onclick="location.href='../dashboard.html'">Dashboard</button>
+        <button onclick="location.href='../events.html'">Events</button>
+        <button onclick="location.href='../find-spots.html'">Find Spots</button>
+        <button class="rc-active">Chatrooms</button>
+        <button onclick="location.href='../profile.html'">Your Profile</button>
+        <button onclick="location.href='../profile-edit.html'">Edit Profile</button>
+        <button onclick="location.href='../marketplace.html'">Marketplace</button>
+      </nav>
+    </aside>
+
+    <main class="rc-content" data-discipline="quads">
+
+      <section class="rc-section rc-active">
+
+        <div class="rc-card" title="This is the Quads chat lobby. Choose a room or create your own.">
+          <h2>Quads Chat</h2>
+          <p class="rc-muted">Rink rhythm, jam skating, outdoor skating, speed — choose a room or create your own.</p>
+        </div>
+
+        <div class="rc-card" title="These are the main public rooms for Quads.">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3>Public Rooms</h3>
+            <span class="rc-muted" style="font-size:12px;">Tap a room to enter chat.</span>
+          </div>
+          <div id="publicRooms" class="rc-list-grid"></div>
+        </div>
+
+        <div class="rc-card" title="Create your own room inside this discipline. Only people with the link can join.">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <h3>Your Rooms</h3>
+            <button class="rc-btn" id="createRoomBtn">+ Create Room</button>
+          </div>
+          <div class="rc-muted
