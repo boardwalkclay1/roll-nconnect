@@ -39,21 +39,37 @@
 
   <div class="wrapper">
 
-    <div class="glass" style="padding:24px;margin-bottom:24px;">
-      <h1 class="glow-white">Announcements</h1>
-      <p style="opacity:0.8;">Posts, spots, events, and lessons from the entire community.</p>
-      <button class="btn-primary" id="newPostBtn" style="margin-top:10px;">Create Announcement</button>
+    <div class="glass" style="padding:24px;margin-bottom:16px;">
+      <h1 class="glow-white" style="margin-bottom:6px;">Announcements</h1>
+      <p style="opacity:0.8;">Posts, spots, events, and lessons from the community.</p>
+
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-primary" id="newPostBtn">Create Announcement</button>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-ghost filter-btn" data-filter="all">All</button>
+          <button class="btn-ghost filter-btn" data-filter="spot">Spots</button>
+          <button class="btn-ghost filter-btn" data-filter="event">Events</button>
+          <button class="btn-ghost filter-btn" data-filter="lesson">Lessons</button>
+        </div>
+
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-ghost feed-mode-btn" data-mode="global">Global</button>
+          <button class="btn-ghost feed-mode-btn" data-mode="following">Following</button>
+        </div>
+      </div>
     </div>
 
     <div class="glass" style="padding:20px;">
       <div id="announcementFeed"></div>
+      <div id="feedLoading" style="text-align:center;opacity:0.7;margin-top:10px;display:none;">Loading…</div>
+      <div id="feedEnd" style="text-align:center;opacity:0.7;margin-top:10px;display:none;">No more announcements.</div>
     </div>
 
   </div>
 
   <script src="rc_core.js"></script>
-  <script src="js/rc_announcements.js"></script>
-
+  <script src="js/rc_announcements_full.js"></script>
   <script>
     document.getElementById("hamburger").onclick = () => {
       document.getElementById("hamburger").classList.toggle("active");
