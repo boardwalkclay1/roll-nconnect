@@ -19,30 +19,30 @@
       overflow:hidden;
     }
 
-    .page-layout {
+    .layout {
       display:grid;
       grid-template-columns:minmax(0,3fr) minmax(0,1.4fr);
       height:100vh;
     }
     @media(max-width:900px){
-      .page-layout {
+      .layout {
         grid-template-columns:1fr;
         grid-template-rows:minmax(0,2.5fr) minmax(0,2fr);
       }
     }
 
+    /* MAP */
     .map-shell {
       position:relative;
       overflow:hidden;
     }
-
     #map {
       width:100%;
       height:100%;
       z-index:1;
     }
 
-    /* Glass Chips */
+    /* FILTER CHIPS */
     .rc-chip {
       padding:8px 14px;
       border-radius:999px;
@@ -59,7 +59,7 @@
       box-shadow:0 0 12px rgba(255,255,255,0.4);
     }
 
-    /* Floating Buttons */
+    /* FLOATING BUTTONS */
     .floating-btn {
       position:absolute;
       right:20px;
@@ -82,7 +82,7 @@
     #btnAddSpot { bottom:260px; left:20px; right:auto; }
     #btnAddTrail { bottom:210px; left:20px; right:auto; }
 
-    /* Info Card */
+    /* INFO CARD */
     .info-card {
       position:absolute;
       bottom:0;
@@ -116,7 +116,7 @@
       opacity:0.7;
     }
 
-    /* Right panel */
+    /* RIGHT PANEL */
     .side-panel {
       background:rgba(0,0,0,0.9);
       border-left:1px solid rgba(255,255,255,0.15);
@@ -167,13 +167,13 @@
 <a href="dashboard.html" class="bubble" id="bubbleDash">Dashboard</a>
 <a href="profile.html" class="bubble" id="bubbleProfile">Profile</a>
 
-<div class="page-layout">
+<div class="layout">
 
   <!-- MAP SIDE -->
   <div class="map-shell">
     <div id="map"></div>
 
-    <!-- Filter chips -->
+    <!-- FILTER CHIPS -->
     <div id="filterBar" style="
       position:absolute;
       top:20px;
@@ -197,14 +197,14 @@
       <button class="rc-chip" data-filter="trail">🛣️ Trails</button>
     </div>
 
-    <!-- Floating buttons -->
+    <!-- FLOATING BUTTONS -->
     <div class="floating-btn" id="btnAddSpot">➕ Add Spot</div>
     <div class="floating-btn" id="btnAddTrail">🛣️ Add Trail</div>
     <div class="floating-btn" id="btnMyLocation">📍 My Location</div>
     <div class="floating-btn" id="btnNearby">🧭 Nearby Rollers</div>
     <div class="floating-btn" id="btnCheckIn">📌 Check In</div>
 
-    <!-- Info card -->
+    <!-- INFO CARD -->
     <div class="info-card" id="infoCard">
       <span class="close-info" id="closeInfo">✖</span>
       <h2 id="infoName"></h2>
@@ -227,7 +227,7 @@
     </div>
   </div>
 
-  <!-- LIST / SEARCH SIDE -->
+  <!-- LIST SIDE -->
   <div class="side-panel">
     <h1 class="section-title">Find Spots</h1>
     <p style="opacity:0.8;">Search spots, events, sessions, and trails — and interact directly with the map.</p>
@@ -249,13 +249,11 @@
 <script src="js/rc_map.js"></script>
 
 <script>
-  // Sidebar toggle
   document.getElementById("hamburger").onclick = () => {
     document.getElementById("hamburger").classList.toggle("active");
     document.getElementById("sidebar").classList.toggle("open");
   };
 
-  // Hook into RC_MAP if it exposes a way to refresh spots / filters
   async function searchSpots() {
     const keyword = document.getElementById("spotSearchInput").value.trim().toLowerCase();
     const location = document.getElementById("spotLocationInput").value.trim().toLowerCase();
@@ -296,15 +294,12 @@
       </div>
     `).join("");
 
-    // Optional: tell the map engine to apply the same filtered set
     if (window.RC_MAP && RC_MAP.setVisibleSpots) {
       RC_MAP.setVisibleSpots(filtered.map(s => s.spotId));
     }
   }
 
   document.getElementById("spotSearchBtn").onclick = searchSpots;
-
-  // Initial load
   searchSpots();
 </script>
 
