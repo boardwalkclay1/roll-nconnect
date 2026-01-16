@@ -6,137 +6,307 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="rc_global.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     body {
       background:#000;
       color:#fff;
       font-family:'Inter',sans-serif;
+      margin:0;
+      padding:0;
+      overflow:hidden;
     }
 
-    .spots-layout {
+    .page-layout {
       display:grid;
-      grid-template-columns: minmax(0,2fr) minmax(0,1.2fr);
-      gap:24px;
+      grid-template-columns:minmax(0,3fr) minmax(0,1.4fr);
+      height:100vh;
     }
     @media(max-width:900px){
-      .spots-layout{grid-template-columns:1fr;}
+      .page-layout {
+        grid-template-columns:1fr;
+        grid-template-rows:minmax(0,2.5fr) minmax(0,2fr);
+      }
     }
 
-    .spots-map-shell {
+    .map-shell {
       position:relative;
-      border-radius:24px;
       overflow:hidden;
-      background:#000;
-      box-shadow:0 0 40px rgba(255,255,255,0.25);
-      min-height:420px;
     }
 
-    .spots-map-embed {
+    #map {
       width:100%;
       height:100%;
-      border:0;
+      z-index:1;
+    }
+
+    /* Glass Chips */
+    .rc-chip {
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.12);
+      backdrop-filter:blur(10px);
+      border:1px solid rgba(255,255,255,0.25);
+      color:#fff;
+      font-size:14px;
+      cursor:pointer;
+      transition:0.25s ease;
+    }
+    .rc-chip.active {
+      background:rgba(255,255,255,0.25);
+      box-shadow:0 0 12px rgba(255,255,255,0.4);
+    }
+
+    /* Floating Buttons */
+    .floating-btn {
+      position:absolute;
+      right:20px;
+      padding:12px 16px;
+      border-radius:999px;
+      background:rgba(0,0,0,0.7);
+      border:1px solid rgba(255,255,255,0.3);
+      color:#fff;
+      cursor:pointer;
+      z-index:20;
+      transition:0.25s ease;
+    }
+    .floating-btn:hover {
+      background:rgba(255,255,255,0.15);
+    }
+
+    #btnMyLocation { bottom:160px; }
+    #btnNearby { bottom:110px; }
+    #btnCheckIn { bottom:60px; }
+    #btnAddSpot { bottom:260px; left:20px; right:auto; }
+    #btnAddTrail { bottom:210px; left:20px; right:auto; }
+
+    /* Info Card */
+    .info-card {
+      position:absolute;
+      bottom:0;
+      left:0;
+      width:100%;
+      background:rgba(0,0,0,0.75);
+      border-top:1px solid rgba(255,255,255,0.2);
+      backdrop-filter:blur(12px);
+      padding:20px;
+      z-index:30;
+      display:none;
+      border-radius:14px 14px 0 0;
+    }
+    @media(min-width:900px){
+      .info-card {
+        width:360px;
+        right:20px;
+        left:auto;
+        top:20px;
+        bottom:auto;
+        border-radius:14px;
+      }
+    }
+    .info-card h2 {
+      margin-top:0;
+      text-shadow:0 0 10px white;
+    }
+    .close-info {
+      float:right;
+      cursor:pointer;
+      opacity:0.7;
+    }
+
+    /* Right panel */
+    .side-panel {
+      background:rgba(0,0,0,0.9);
+      border-left:1px solid rgba(255,255,255,0.15);
+      padding:24px;
+      overflow-y:auto;
+    }
+    .spot-meta {
+      margin-top:6px;
+      font-size:13px;
+      opacity:0.8;
+    }
+    .tag {
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:8px;
+      font-size:12px;
+      margin-right:6px;
+      margin-top:4px;
+      background:rgba(255,255,255,0.12);
+      backdrop-filter:blur(6px);
     }
   </style>
 </head>
 
 <body>
 
-  <div class="stars1"></div>
-  <div class="stars2"></div>
-  <div class="stars3"></div>
+<div class="stars1"></div>
+<div class="stars2"></div>
+<div class="stars3"></div>
 
-  <div class="hamburger" id="hamburger">
-    <span></span><span></span><span></span>
-  </div>
+<div class="hamburger" id="hamburger">
+  <span></span><span></span><span></span>
+</div>
 
-  <div class="sidebar" id="sidebar">
-    <h2>Menu</h2>
-    <a href="index.html">Home</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="events.html">Events</a>
-    <a href="find-spots.html">Find Spots</a>
-    <a href="chatrooms.html">Chatrooms</a>
-    <a href="profile.html">Your Profile</a>
-    <a href="profile-edit.html">Edit Profile</a>
-  </div>
+<div class="sidebar" id="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="events.html">Events</a>
+  <a href="find-spots.html">Find Spots</a>
+  <a href="chatrooms.html">Chatrooms</a>
+  <a href="profile.html">Your Profile</a>
+  <a href="profile-edit.html">Edit Profile</a>
+</div>
 
-  <a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
-  <a href="events.html" class="bubble" id="bubbleEvents">Events</a>
-  <a href="dashboard.html" class="bubble" id="bubbleDash">Dashboard</a>
-  <a href="profile.html" class="bubble" id="bubbleProfile">Profile</a>
+<a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
+<a href="events.html" class="bubble" id="bubbleEvents">Events</a>
+<a href="dashboard.html" class="bubble" id="bubbleDash">Dashboard</a>
+<a href="profile.html" class="bubble" id="bubbleProfile">Profile</a>
 
-  <div class="wrapper">
+<div class="page-layout">
 
-    <div class="glass" style="padding:32px;margin-bottom:32px;">
-      <h1 class="section-title">Find Spots</h1>
-      <p style="opacity:0.8;">Search the world of spots — your map updates live.</p>
+  <!-- MAP SIDE -->
+  <div class="map-shell">
+    <div id="map"></div>
 
-      <div class="flex-between flex-wrap gap-md" style="margin-top:18px;">
-        <input id="spotSearchInput" class="glass-input" placeholder="Search spots…">
-        <input id="spotLocationInput" class="glass-input" placeholder="City or ZIP">
-        <input id="spotRadiusInput" class="glass-input" type="number" min="1" max="200" value="25" style="max-width:120px;" placeholder="Miles">
-        <button class="btn-primary" id="spotSearchBtn">Search</button>
-      </div>
+    <!-- Filter chips -->
+    <div id="filterBar" style="
+      position:absolute;
+      top:20px;
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      z-index:20;
+    ">
+      <button class="rc-chip" data-filter="water">💧 Water</button>
+      <button class="rc-chip" data-filter="food">🍔 Food</button>
+      <button class="rc-chip" data-filter="plaza">🏬 Plazas</button>
+      <button class="rc-chip" data-filter="big_lot">🏪 Big Lots</button>
+      <button class="rc-chip" data-filter="parking_garage">🅿️ Garages</button>
+      <button class="rc-chip" data-filter="hospital">🏥 Hospitals</button>
+      <button class="rc-chip" data-filter="college">🎓 Colleges</button>
+      <button class="rc-chip" data-filter="rink">⛸ Rinks</button>
+      <button class="rc-chip" data-filter="park">🌳 Parks</button>
+      <button class="rc-chip" data-filter="skatepark">🛹 Skateparks</button>
+      <button class="rc-chip" data-filter="trail">🛣️ Trails</button>
     </div>
 
-    <div class="spots-layout">
+    <!-- Floating buttons -->
+    <div class="floating-btn" id="btnAddSpot">➕ Add Spot</div>
+    <div class="floating-btn" id="btnAddTrail">🛣️ Add Trail</div>
+    <div class="floating-btn" id="btnMyLocation">📍 My Location</div>
+    <div class="floating-btn" id="btnNearby">🧭 Nearby Rollers</div>
+    <div class="floating-btn" id="btnCheckIn">📌 Check In</div>
 
-      <!-- REAL MAP EMBED -->
-      <div class="spots-map-shell glass">
-        <iframe src="map.html?embed=1" class="spots-map-embed"></iframe>
-      </div>
+    <!-- Info card -->
+    <div class="info-card" id="infoCard">
+      <span class="close-info" id="closeInfo">✖</span>
+      <h2 id="infoName"></h2>
+      <p id="infoType"></p>
+      <p id="infoAmenities"></p>
 
-      <!-- SPOT LIST -->
-      <div class="glass">
-        <h2 class="section-title">Spots List</h2>
-        <div id="spotsList"></div>
-      </div>
+      <button class="floating-btn" style="position:relative;right:auto;bottom:auto;margin-top:10px;" id="btnDirections">
+        🧭 Get Directions
+      </button>
 
+      <h3 style="margin-top:20px;">People Here Now</h3>
+      <div id="infoPeople"></div>
+
+      <h3 style="margin-top:20px;">Reviews</h3>
+      <div id="infoReviews"></div>
+
+      <button class="floating-btn" style="position:relative;right:auto;bottom:auto;margin-top:10px;" id="btnLeaveReview">
+        ⭐ Leave Review
+      </button>
     </div>
   </div>
 
-  <script src="rc_core.js"></script>
+  <!-- LIST / SEARCH SIDE -->
+  <div class="side-panel">
+    <h1 class="section-title">Find Spots</h1>
+    <p style="opacity:0.8;">Search spots, events, sessions, and trails — and interact directly with the map.</p>
 
-  <script>
-    document.getElementById("hamburger").onclick = () => {
-      document.getElementById("hamburger").classList.toggle("active");
-      document.getElementById("sidebar").classList.toggle("open");
-    };
+    <div class="flex-between flex-wrap gap-md" style="margin-top:18px;margin-bottom:18px;">
+      <input id="spotSearchInput" class="glass-input" placeholder="Search spots…">
+      <input id="spotLocationInput" class="glass-input" placeholder="City or ZIP">
+      <input id="spotRadiusInput" class="glass-input" type="number" min="1" max="200" value="25" style="max-width:120px;" placeholder="Miles">
+      <button class="btn-primary" id="spotSearchBtn">Search</button>
+    </div>
 
-    async function searchSpots() {
-      const keyword = document.getElementById("spotSearchInput").value.trim();
-      const location = document.getElementById("spotLocationInput").value.trim();
-      const radius = document.getElementById("spotRadiusInput").value.trim();
+    <h2 class="section-title">Spots</h2>
+    <div id="spotsList"></div>
+  </div>
 
-      const spots = await fetch(`/api/spots`).then(r => r.json());
+</div>
 
-      const filtered = spots.filter(s => {
-        const k = keyword.toLowerCase();
-        const matchesK = !k || s.name.toLowerCase().includes(k) || s.type.toLowerCase().includes(k);
-        const matchesL = !location || (s.city || "").toLowerCase().includes(location.toLowerCase());
-        return matchesK && matchesL;
-      });
+<script src="rc_core.js"></script>
+<script src="js/rc_map.js"></script>
 
-      const el = document.getElementById("spotsList");
-      if (!filtered.length) {
-        el.innerHTML = "<p style='opacity:0.7;'>No spots found.</p>";
-        return;
-      }
+<script>
+  // Sidebar toggle
+  document.getElementById("hamburger").onclick = () => {
+    document.getElementById("hamburger").classList.toggle("active");
+    document.getElementById("sidebar").classList.toggle("open");
+  };
 
-      el.innerHTML = filtered.map(s => `
-        <div class="glass-card" style="margin-bottom:12px;">
-          <strong>${s.name}</strong><br>
-          <span style="opacity:0.8;">${s.type} • ${s.city || ""}</span><br>
-          <span style="opacity:0.8;">${s.description || ""}</span><br>
-          ${s.liveSession ? `<span class="tag-pill tag-pink">Live session</span>` : ""}
-        </div>
-      `).join("");
+  // Hook into RC_MAP if it exposes a way to refresh spots / filters
+  async function searchSpots() {
+    const keyword = document.getElementById("spotSearchInput").value.trim().toLowerCase();
+    const location = document.getElementById("spotLocationInput").value.trim().toLowerCase();
+
+    const spots = await fetch(`/api/spots`).then(r => r.json());
+
+    const filtered = spots.filter(s => {
+      const matchesKeyword =
+        !keyword ||
+        s.name.toLowerCase().includes(keyword) ||
+        s.type.toLowerCase().includes(keyword);
+
+      const matchesLocation =
+        !location ||
+        (s.city || "").toLowerCase().includes(location);
+
+      return matchesKeyword && matchesLocation;
+    });
+
+    const el = document.getElementById("spotsList");
+    if (!filtered.length) {
+      el.innerHTML = "<p style='opacity:0.7;'>No spots found.</p>";
+      return;
     }
 
-    document.getElementById("spotSearchBtn").onclick = searchSpots;
-    searchSpots();
-  </script>
+    el.innerHTML = filtered.map(s => `
+      <div class="glass-card" style="margin-bottom:12px;cursor:pointer;"
+           onclick="window.RC_MAP && RC_MAP.focusSpot && RC_MAP.focusSpot('${s.spotId}')">
+        <strong>${s.name}</strong><br>
+        <span style="opacity:0.8;">${s.type} • ${s.city || ""}</span>
+        <div class="spot-meta">
+          ${s.liveSession ? `<span class="tag">🔥 Live session</span>` : ""}
+          ${s.trails ? `<span class="tag">🛣️ Trails</span>` : ""}
+        </div>
+        <div class="spot-meta">
+          ${s.description || ""}
+        </div>
+      </div>
+    `).join("");
+
+    // Optional: tell the map engine to apply the same filtered set
+    if (window.RC_MAP && RC_MAP.setVisibleSpots) {
+      RC_MAP.setVisibleSpots(filtered.map(s => s.spotId));
+    }
+  }
+
+  document.getElementById("spotSearchBtn").onclick = searchSpots;
+
+  // Initial load
+  searchSpots();
+</script>
 
 </body>
 </html>
