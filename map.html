@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Roll ’n Connect – Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Global Theme -->
+  <link rel="stylesheet" href="rc_global.css">
+
+  <!-- Leaflet (OpenStreetMap) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Layout */
+    .map-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Sidebar (collapsible) */
+    .map-sidebar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 300px;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      border-right: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 10;
+      transition: 0.3s ease;
+    }
+
+    .map-sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 20px;
+      left: 310px;
+      z-index: 11;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+      transition: 0.25s ease;
+    }
+
+    .sidebar-toggle:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* Spot List */
+    .spot-list-item {
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .spot-list-item:hover {
+      background: rgba(255,255,255,0.12);
+    }
+
+    /* Floating Buttons */
+    .floating-btn {
+      position: absolute;
+      right: 20px;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      cursor: pointer;
+      z-index: 20;
+      transition: 0.25s ease;
+    }
+
+    .floating-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    #btnMyLocation { bottom: 160px; }
+    #btnNearby { bottom: 110px; }
+    #btnCheckIn { bottom: 60px; }
+
+    /* Info Card (right side) */
+    .info-card {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 340px;
+      background: rgba(0,0,0,0.75);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      z-index: 15;
+      display: none;
+    }
+
+    .info-card h2 {
+      margin-top: 0;
+      text-shadow: 0 0 10px white;
+    }
+
+    .info-card .close-info {
+      cursor: pointer;
+      opacity: 0.7;
+      float: right;
+    }
+
+    /* Mobile Slide-Up Panel */
+    @media (max-width: 900px) {
+      .map-sidebar {
+        display: none;
+      }
+
+      .sidebar-toggle {
+        display: none;
+      }
+
+      .info-card {
+        width: 100%;
+        bottom: 0;
+        top: auto;
+        right: 0;
+        left: 0;
+        border-radius: 14px 14px 0 0;
+        display: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="map-container">
+
+  <!-- Sidebar -->
+  <div class="map-sidebar" id="mapSidebar">
+    <h2 style="margin-top:0;">Nearby Spots</h2>
+    <p class="rc-muted">Sorted by distance</p>
+
+    <div id="spotList"></div>
+  </div>
+
+  <!-- Sidebar Toggle -->
+  <div class="sidebar-toggle" id="sidebarToggle">☰</div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Floating Buttons -->
+  <div class="floating-btn" id="btnMyLocation">📍 My Location</div>
+  <div class="floating-btn" id="btnNearby">🧭 Nearby Rollers</div>
+  <div class="floating-btn" id="btnCheckIn">📌 Check In</div>
+
+  <!-- Info Card -->
+  <div class="info-card" id="infoCard">
+    <span class="close-info" id="closeInfo">✖</span>
+    <h2 id="infoName"></h2>
+    <p id="infoType"></p>
+    <p id="infoAmenities"></p>
+
+    <button class="floating-btn" style="position:relative;right:auto;bottom:auto;margin-top:10px;" id="btnDirections">
+      🧭 Get Directions
+    </button>
+
+    <h3 style="margin-top:20px;">People Here Now</h3>
+    <div id="infoPeople"></div>
+
+    <h3 style="margin-top:20px;">Reviews</h3>
+    <div id="infoReviews"></div>
+
+    <button class="floating-btn" style="position:relative;right:auto;bottom:auto;margin-top:10px;" id="btnLeaveReview">
+      ⭐ Leave Review
+    </button>
+  </div>
+
+</div>
+
+<!-- Map Engine -->
+<script src="js/rc_map.js"></script>
+
+</body>
+</html>
