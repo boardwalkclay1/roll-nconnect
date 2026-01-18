@@ -2,190 +2,151 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Marketplace Item — Roll ’n Connect</title>
+  <title>Listing — Roll ’n Connect</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="rc_global.css">
 </head>
-
 <body>
 
-  <!-- OPTIONAL STARFIELD -->
-  <div class="stars1"></div>
-  <div class="stars2"></div>
-  <div class="stars3"></div>
+<div class="stars1"></div><div class="stars2"></div><div class="stars3"></div>
 
-  <div class="rc-app">
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+<div class="sidebar" id="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="marketplace.html">Marketplace</a>
+  <a href="chatrooms.html">Messages</a>
+  <a href="profile.html">Your Profile</a>
+</div>
 
-    <!-- SIDEBAR -->
-    <aside class="rc-sidebar">
-      <div class="rc-logo">Roll ’n Connect</div>
+<div class="wrapper" style="padding:24px;">
+  <div class="glass" style="padding:24px;">
+    <a href="marketplace.html" style="font-size:13px;opacity:0.8;">← Back to marketplace</a>
 
-      <nav class="rc-nav">
-        <button onclick="location.href='dashboard.html'">Dashboard</button>
-        <button onclick="location.href='events.html'">Events</button>
-        <button onclick="location.href='find-spots.html'">Find Spots</button>
-        <button onclick="location.href='chatrooms.html'">Chatrooms</button>
-        <button onclick="location.href='profile.html'">Your Profile</button>
-        <button onclick="location.href='profile-edit.html'">Edit Profile</button>
-        <button onclick="location.href='marketplace.html'">Marketplace</button>
-      </nav>
-    </aside>
+    <div class="flex-wrap" style="margin-top:16px;gap:24px;display:flex;flex-wrap:wrap;">
+      <div style="flex:1 1 280px;min-width:260px;">
+        <div id="photoGallery"></div>
+      </div>
 
-    <!-- MAIN CONTENT -->
-    <main class="rc-content">
+      <div style="flex:1 1 280px;min-width:260px;">
+        <h1 id="itemTitle" class="section-title"></h1>
+        <p id="itemMeta" style="opacity:0.8;"></p>
+        <p id="itemPrice" style="font-weight:600;margin-top:8px;"></p>
 
-      <section class="rc-section rc-active" id="itemSection">
+        <p id="itemDescription" style="margin-top:16px;"></p>
+        <div id="itemTags" style="margin-top:10px;"></div>
 
-        <!-- ITEM HEADER -->
-        <div class="rc-card" id="itemHeader"></div>
+        <div id="itemSpotLink" style="margin-top:14px;"></div>
 
-        <!-- ITEM BODY -->
-        <div class="rc-card" id="itemDetails"></div>
+        <div id="itemSeller" style="margin-top:18px;"></div>
 
-        <!-- SELLER SNAPSHOT -->
-        <div class="rc-card" id="sellerCard"></div>
-
-        <!-- RELATED ITEMS -->
-        <div class="rc-card">
-          <h3>More Like This</h3>
-          <div id="relatedGrid" class="rc-market-grid"></div>
+        <div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-primary" id="btnMessageSeller">Message Seller</button>
+          <button class="btn-secondary" id="btnSaveListing">Save</button>
         </div>
-
-      </section>
-
-    </main>
-
+      </div>
+    </div>
   </div>
+</div>
 
-  <script src="rc_core.js"></script>
+<script src="rc_core.js"></script>
+<script src="js/rc_market_core.js"></script>
+<script>
+  document.getElementById("hamburger").onclick = () => {
+    document.getElementById("hamburger").classList.toggle("active");
+    document.getElementById("sidebar").classList.toggle("open");
+  };
 
-  <script>
-    /* ---------------------------------------------------
-       SAFETY FALLBACK: If marketplace isn't defined
-    --------------------------------------------------- */
-    if (typeof RC.getMarketplaceItems !== "function") {
-      RC.getMarketplaceItems = () => [];
+  document.addEventListener("DOMContentLoaded", () => {
+    const core = window.RC_MARKET_CORE;
+    const id = core.getQueryParam("id");
+    const item = core.getListingById(id);
+
+    const titleEl = document.getElementById("itemTitle");
+    const metaEl = document.getElementById("itemMeta");
+    const priceEl = document.getElementById("itemPrice");
+    const descEl = document.getElementById("itemDescription");
+    const tagsEl = document.getElementById("itemTags");
+    const spotEl = document.getElementById("itemSpotLink");
+    const sellerEl = document.getElementById("itemSeller");
+    const galleryEl = document.getElementById("photoGallery");
+    const btnMsg = document.getElementById("btnMessageSeller");
+    const btnSave = document.getElementById("btnSaveListing");
+
+    if (!item) {
+      titleEl.textContent = "Listing not found";
+      return;
     }
 
-    /* ---------------------------------------------------
-       LOAD ITEM
-    --------------------------------------------------- */
-    function loadItem() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get("id");
+    titleEl.textContent = item.title;
+    metaEl.textContent = `${item.category}${item.spotName ? " • " + item.spotName : ""}`;
+    priceEl.textContent = core.formatPrice(item.price, item.currency);
+    descEl.textContent = item.description || "";
+    tagsEl.innerHTML = (item.tags || []).map(t => `<span class="market-tag">${t}</span>`).join("");
 
-      const items = RC.getMarketplaceItems();
-      const item = items.find(i => i.id === id);
-
-      const headerEl = document.getElementById("itemHeader");
-      const detailsEl = document.getElementById("itemDetails");
-      const sellerEl = document.getElementById("sellerCard");
-
-      if (!item) {
-        headerEl.innerHTML = "<p class='rc-muted'>Item not found.</p>";
-        return;
-      }
-
-      /* ------------------------------
-         HEADER
-      ------------------------------ */
-      headerEl.innerHTML = `
-        <h2>${item.title}</h2>
-        <div class="rc-muted">${item.discipline || "Unlabeled"}</div>
+    if (item.spotId && item.spotName) {
+      spotEl.innerHTML = `
+        <button class="btn-small" onclick="window.location.href='find-spots.html?spot=${item.spotId}'">
+          📍 View on map: ${item.spotName}
+        </button>
       `;
+    }
 
-      /* ------------------------------
-         DETAILS
-      ------------------------------ */
-      detailsEl.innerHTML = `
-        <div style="display:flex;gap:24px;flex-wrap:wrap;">
-          
-          <div style="flex:1;min-width:260px;">
-            <div style="
-              width:100%;
-              height:260px;
-              border-radius:14px;
-              overflow:hidden;
-              background:rgba(255,255,255,0.06);
-              margin-bottom:20px;">
-              ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;">` : ""}
-            </div>
-          </div>
-
-          <div style="flex:2;min-width:260px;">
-            <p class="rc-muted">${item.discipline || "Unlabeled"}</p>
-            <p style="font-size:1.4rem;margin:10px 0;">$${item.price}</p>
-
-            ${item.donateToGiveaway ? `<div class="rc-chip">Donated to Giveaway</div>` : ""}
-
-            <p style="margin-top:20px;">${item.description || "No description provided."}</p>
-
-            <button class="rc-btn" style="margin-top:20px;" onclick="location.href='chatrooms.html'">
-              Contact Seller
-            </button>
-          </div>
-
-        </div>
-      `;
-
-      /* ------------------------------
-         SELLER SNAPSHOT
-      ------------------------------ */
-      const profile = RC.getProfile() || {};
-
+    const seller = core.getUserById(item.sellerId);
+    if (seller) {
       sellerEl.innerHTML = `
-        <h3>Seller</h3>
-        <div style="display:flex;align-items:center;gap:14px;margin-top:10px;">
-          <div class="profile-avatar" style="width:60px;height:60px;">
-            <img src="${profile.avatarUrl || 'https://via.placeholder.com/80x80?text=Skater'}">
-          </div>
-          <div>
-            <strong>${profile.name || "Unnamed Skater"}</strong><br>
-            <span class="rc-muted">@${profile.username || "unknown"}</span>
-          </div>
+        <div style="font-size:14px;">
+          Sold by
+          <a href="marketplace-seller.html?id=${seller.id}" style="color:#fff;text-decoration:underline;">
+            ${seller.name}
+          </a>
+          ${seller.city ? " • " + seller.city : ""}
         </div>
       `;
-
-      /* ------------------------------
-         RELATED ITEMS
-      ------------------------------ */
-      renderRelated(items, item);
     }
 
-    /* ---------------------------------------------------
-       RELATED ITEMS
-    --------------------------------------------------- */
-    function renderRelated(allItems, currentItem) {
-      const relatedEl = document.getElementById("relatedGrid");
+    renderGallery(item);
 
-      const related = allItems
-        .filter(i => i.id !== currentItem.id && i.discipline === currentItem.discipline)
-        .slice(0, 4);
-
-      if (!related.length) {
-        relatedEl.innerHTML = "<p class='rc-muted'>No related items found.</p>";
+    function renderGallery(item) {
+      const photos = item.photos || [];
+      if (!photos.length) {
+        galleryEl.innerHTML = `
+          <div style="width:100%;height:260px;border-radius:16px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:40px;opacity:0.6;">
+            🛼
+          </div>
+        `;
         return;
       }
 
-      relatedEl.innerHTML = related.map(item => `
-        <div class="rc-market-item">
-          <div style="width:100%;height:140px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.06);margin-bottom:10px;">
-            ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;">` : ""}
-          </div>
-          <div class="rc-market-item-title">${item.title}</div>
-          <div class="rc-muted">${item.discipline}</div>
-          <div class="rc-market-item-price">$${item.price}</div>
-          <button class="rc-btn" style="margin-top:10px;"
-            onclick="location.href='marketplace-item.html?id=${encodeURIComponent(item.id)}'">
-            View
-          </button>
+      galleryEl.innerHTML = `
+        <div style="width:100%;height:260px;border-radius:16px;overflow:hidden;margin-bottom:8px;">
+          <img id="galleryMain" src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;">
         </div>
-      `).join("");
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${photos.map((p, idx) => `
+            <div style="width:60px;height:60px;border-radius:10px;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,0.2);" onclick="document.getElementById('galleryMain').src='${p}'">
+              <img src="${p}" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+          `).join("")}
+        </div>
+      `;
     }
 
-    /* INIT */
-    loadItem();
-  </script>
+    function updateSaveButton() {
+      btnSave.textContent = core.isSaved(item.id) ? "Saved" : "Save";
+    }
+
+    btnSave.onclick = () => {
+      core.toggleSaved(item.id);
+      updateSaveButton();
+    };
+    updateSaveButton();
+
+    btnMsg.onclick = () => {
+      window.location.href = `chatroom.html?user=${item.sellerId}&item=${item.id}`;
+    };
+  });
+</script>
 
 </body>
 </html>
