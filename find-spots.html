@@ -7,30 +7,48 @@
   <link rel="stylesheet" href="rc_global.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    #map { width: 100%; height: 70vh; border-radius: 16px; overflow: hidden; }
+    #map {
+      width: 100%;
+      height: 70vh;
+      border-radius: 16px;
+      overflow: hidden;
+    }
   </style>
 </head>
 <body>
 
-<div class="stars1"></div><div class="stars2"></div><div class="stars3"></div>
+<!-- Background FX -->
+<div class="stars1"></div>
+<div class="stars2"></div>
+<div class="stars3"></div>
 
-<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+<!-- Sidebar + Hamburger -->
+<div class="hamburger" id="hamburger">
+  <span></span><span></span><span></span>
+</div>
+
 <div class="sidebar" id="sidebar">
   <h2>Menu</h2>
   <a href="index.html">Home</a>
-  <a href="find-spots.html">Find Spots</a>
+  <a href="find-spots.html" class="active">Find Spots</a>
   <a href="events.html">Events</a>
   <a href="marketplace.html">Marketplace</a>
   <a href="chatrooms.html">Messages</a>
   <a href="profile.html">Your Profile</a>
 </div>
 
+<!-- Main Wrapper -->
 <div class="wrapper" style="padding:24px;">
+
+  <!-- Header -->
   <div class="glass" style="padding:24px;margin-bottom:16px;">
     <h1 class="section-title">Find Spots</h1>
-    <p style="opacity:0.8;">Trails, plazas, garages, parks, skateparks, water, and more—powered by OSM + your own spots.</p>
+    <p style="opacity:0.8;">
+      Trails, plazas, garages, parks, skateparks, water, and more — powered by OSM + your own national database.
+    </p>
 
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <!-- Filters + Location -->
+    <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <select id="spotFilterSelect" class="glass-input">
         <option value="all">All</option>
         <option value="trail">Trails</option>
@@ -49,20 +67,26 @@
     </div>
   </div>
 
+  <!-- Map Container -->
   <div class="glass" style="padding:0;">
     <div id="map"></div>
   </div>
+
 </div>
 
+<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="rc_core.js"></script>
 <script src="js/rc_map_core.js"></script>
+
 <script>
+  // Sidebar toggle
   document.getElementById("hamburger").onclick = () => {
     document.getElementById("hamburger").classList.toggle("active");
     document.getElementById("sidebar").classList.toggle("open");
   };
 
+  // Map filter + location logic
   document.addEventListener("DOMContentLoaded", () => {
     const filterSelect = document.getElementById("spotFilterSelect");
     const btnUseLocation = document.getElementById("btnUseLocation");
