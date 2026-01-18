@@ -9,10 +9,12 @@
 
 <body>
 
+  <!-- Background FX -->
   <div class="stars1"></div>
   <div class="stars2"></div>
   <div class="stars3"></div>
 
+  <!-- Loading Screen -->
   <div class="rc-loading-overlay" id="loadingScreen">
     <div class="rc-loading-track">
       <div class="rc-longboard"></div>
@@ -21,10 +23,12 @@
     <div class="rc-loading-text">Loading Profile…</div>
   </div>
 
+  <!-- Hamburger -->
   <div class="hamburger" id="hamburger">
     <span></span><span></span><span></span>
   </div>
 
+  <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
     <h2>Menu</h2>
     <a href="index.html">Home</a>
@@ -34,25 +38,30 @@
     <a href="find-spots.html">Find Spots</a>
     <a href="chatrooms.html">Chatrooms</a>
     <a href="clips.html">Clips Feed</a>
-    <a href="profile.html">Your Profile</a>
+    <a href="profile.html" class="active">Your Profile</a>
     <a href="profile-edit.html">Edit Profile</a>
     <a href="settings.html">Settings</a>
   </div>
 
+  <!-- Bubble Nav -->
   <a href="chatrooms.html" class="bubble" id="bubbleChat">Chat</a>
   <a href="find-spots.html" class="bubble" id="bubbleEvents">Spots</a>
   <a href="clips.html" class="bubble" id="bubbleDash">Clips</a>
   <a href="notifications.html" class="bubble" id="bubbleNotif">Alerts</a>
 
+  <!-- Main Wrapper -->
   <div class="wrapper">
 
     <!-- PROFILE HEADER -->
     <div class="glass" style="padding:40px;margin-bottom:30px;">
       <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+
+        <!-- Avatar -->
         <div style="width:120px;height:120px;border-radius:50%;overflow:hidden;background:rgba(255,255,255,0.1);">
           <img id="profileAvatar" style="width:100%;height:100%;object-fit:cover;">
         </div>
 
+        <!-- Profile Info -->
         <div>
           <h1 id="profileName" class="glow-white" style="margin-bottom:4px;"></h1>
           <div id="profileUsername" style="opacity:0.8;margin-bottom:6px;"></div>
@@ -65,6 +74,7 @@
             <a href="settings.html" class="btn-ghost">Settings</a>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -76,14 +86,17 @@
         <button class="tab-btn" data-tab="lessons">Lessons</button>
       </div>
 
+      <!-- Posts -->
       <div id="tab-posts" class="tab-panel tab-panel-active">
         <div id="postsFeed"></div>
       </div>
 
+      <!-- Clips -->
       <div id="tab-clips" class="tab-panel">
         <div id="clipsFeed"></div>
       </div>
 
+      <!-- Lessons -->
       <div id="tab-lessons" class="tab-panel">
         <div id="lessonsList"></div>
         <div style="margin-top:12px;">
@@ -102,6 +115,7 @@
     <div class="glass" style="margin-bottom:40px;">
       <h2 class="section-title">Upcoming Sessions</h2>
       <div id="miniCalendar"></div>
+
       <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
         <a href="calendar.html" class="btn-primary">Open Full Calendar</a>
         <button class="btn-ghost" id="addCalendarItemBtn">Add Session</button>
@@ -110,10 +124,12 @@
 
   </div>
 
+  <!-- Scripts -->
   <script src="rc_core.js"></script>
   <script src="js/rc_profile_engine.js"></script>
 
   <script>
+    // Loading overlay fade-out
     window.addEventListener("load", () => {
       setTimeout(() => {
         const ls = document.getElementById("loadingScreen");
@@ -122,6 +138,7 @@
       }, 600);
     });
 
+    // Sidebar toggle
     document.getElementById("hamburger").onclick = () => {
       document.getElementById("hamburger").classList.toggle("active");
       document.getElementById("sidebar").classList.toggle("open");
