@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seller — Roll ’n Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="rc_global.css">
+</head>
+<body>
+
+<div class="stars1"></div><div class="stars2"></div><div class="stars3"></div>
+
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+<div class="sidebar" id="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="marketplace.html">Marketplace</a>
+  <a href="chatrooms.html">Messages</a>
+  <a href="profile.html">Your Profile</a>
+</div>
+
+<div class="wrapper" style="padding:24px;">
+  <div class="glass" style="padding:24px;margin-bottom:16px;">
+    <a href="marketplace.html" style="font-size:13px;opacity:0.8;">← Back to marketplace</a>
+    <h1 id="sellerName" class="section-title" style="margin-top:8px;"></h1>
+    <p id="sellerCity" style="opacity:0.8;"></p>
+    <p id="sellerBio" style="margin-top:10px;"></p>
+    <button class="btn-primary" id="btnMessageSeller" style="margin-top:10px;">Message</button>
+  </div>
+
+  <div class="glass" style="padding:24px;">
+    <h2 class="section-title">Listings</h2>
+    <div id="sellerListings" class="market-grid" style="margin-top:16px;"></div>
+  </div>
+</div>
+
+<script src="rc_core.js"></script>
+<script src="js/rc_market_core.js"></script>
+<script>
+  document.getElementById("hamburger").onclick = () => {
+    document.getElementById("hamburger").classList.toggle("active");
+    document.getElementById("sidebar").classList.toggle("open");
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const core = window.RC_MARKET_CORE;
+    const id = core.getQueryParam("id");
+    const seller = core.getUserById(id);
+
+    const nameEl = document.getElementById("sellerName");
+    const cityEl = document.getElementById("sellerCity");
+    const bioEl = document.getElementById("sellerBio");
+    const listEl = document.getElementById("sellerListings");
+    const btnMsg = document.getElementById("btnMessageSeller");
+
+    if (!seller) {
+      nameEl.textContent = "Seller not found";
+      return;
+    }
+
+    nameEl.textContent = seller.name;
+    cityEl.textContent = seller.city || "";
+    bioEl.textContent = seller.bio || "";
+
+    btnMsg.onclick = () => {
+      window.location.href = `chatroom.html?user=${seller.id}`;
+    };
+
+    const items = core.getListingsBySeller(seller.id);
+    if (!items.length) {
+      listEl.innerHTML = "<p style='opacity:0.7;'>No listings yet.</p>";
+      return;
+    }
+
+    listEl.innerHTML = items.map(item => `
+      <div class="market-card" onclick="window.location.href='marketplace-item.html?id=${item.id}'">
+        ${(item.photos && item.photos.length)
+          ? `<img src="${item.photos[0]}" style="width:100%;height:140px;object-fit:cover;border-radius:12px;">`
+          : `<div style="width:100%;height:140px;border-radius:12px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.6;">🛼</div>`
+        }
+        <div style="margin-top:8px;">
+          <strong>${item.title}</strong><br>
+          <span style="opacity:0.8;font-size:13px;">${item.category}${item.spotName ? " • " + item.spotName : ""}</span>
+          <div style="margin-top:6px;font-weight:600;">${core.formatPrice(item.price, item.currency)}</div>
+        </div>
+      </div>
+    `).join("");
+  });
+</script>
+
+</body>
+</html>
