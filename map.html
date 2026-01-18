@@ -171,22 +171,22 @@
 
 </div>
 
-<!-- Map Engine -->
-<script src="js/rc_map_core.js"></script>
+<!-- Unified Map Engine -->
+<script src="js/rc_map.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const filterSelect = document.getElementById("spotFilterSelect");
 
     filterSelect.onchange = () => {
-      window.RC_MAP.setFilter(filterSelect.value);
+      RC_MAP.setFilter(filterSelect.value);
     };
 
     document.getElementById("btnMyLocation").onclick = () => {
       if (!navigator.geolocation) return alert("Location not supported.");
       navigator.geolocation.getCurrentPosition(pos => {
-        window.RC_MAP.setCenter(pos.coords.latitude, pos.coords.longitude, 13);
-        window.RC_MAP.highlightNearbySpots(pos.coords.latitude, pos.coords.longitude);
+        RC_MAP.setCenter(pos.coords.latitude, pos.coords.longitude, 13);
+        RC_MAP.highlightNearbySpots(pos.coords.latitude, pos.coords.longitude);
       });
     };
   });
