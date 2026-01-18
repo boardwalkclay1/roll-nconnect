@@ -6,183 +6,160 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="rc_global.css">
 </head>
-
 <body>
 
-  <!-- OPTIONAL STARFIELD -->
-  <div class="stars1"></div>
-  <div class="stars2"></div>
-  <div class="stars3"></div>
+<div class="stars1"></div><div class="stars2"></div><div class="stars3"></div>
 
-  <div class="rc-app">
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+<div class="sidebar" id="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="find-spots.html">Find Spots</a>
+  <a href="events.html">Events</a>
+  <a href="marketplace.html">Marketplace</a>
+  <a href="chatrooms.html">Messages</a>
+  <a href="profile.html">Your Profile</a>
+</div>
 
-    <!-- SIDEBAR -->
-    <aside class="rc-sidebar">
-      <div class="rc-logo">Roll ’n Connect</div>
+<div class="wrapper" style="padding:24px;">
+  <div class="glass" style="padding:24px;margin-bottom:16px;">
+    <div class="flex-between flex-wrap gap-md">
+      <div>
+        <h1 class="section-title">Marketplace</h1>
+        <p style="opacity:0.8;">Listings from skaters, crews, and hosts. Message directly, meet up in real life.</p>
+      </div>
+      <div>
+        <a href="marketplace-create.html" class="btn-primary">+ Create Listing</a>
+        <a href="marketplace-my.html" class="btn-secondary" style="margin-left:8px;">My Listings</a>
+        <a href="marketplace-saved.html" class="btn-secondary" style="margin-left:8px;">Saved</a>
+      </div>
+    </div>
 
-      <nav class="rc-nav">
-        <button onclick="location.href='dashboard.html'">Dashboard</button>
-        <button onclick="location.href='events.html'">Events</button>
-        <button onclick="location.href='find-spots.html'">Find Spots</button>
-        <button onclick="location.href='chatrooms.html'">Chatrooms</button>
-        <button onclick="location.href='profile.html'">Your Profile</button>
-        <button onclick="location.href='profile-edit.html'">Edit Profile</button>
-        <button class="rc-active">Marketplace</button>
-      </nav>
-    </aside>
+    <div class="flex-between flex-wrap gap-md" style="margin-top:16px;">
+      <input id="marketSearchInput" class="glass-input" placeholder="Search listings…">
+      <select id="marketSortSelect" class="glass-input" style="max-width:180px;">
+        <option value="featured">Featured</option>
+        <option value="price_low">Price: Low → High</option>
+        <option value="price_high">Price: High → Low</option>
+        <option value="newest">Newest</option>
+      </select>
+    </div>
 
-    <!-- MAIN CONTENT -->
-    <main class="rc-content">
-
-      <section class="rc-section rc-active" id="marketSection">
-
-        <!-- HEADER + PROFILE SNAPSHOT -->
-        <div class="rc-card">
-          <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;">
-            <div>
-              <h2>Marketplace</h2>
-              <p class="rc-muted">Browse, filter, and explore listings from the Roll ’n Connect community.</p>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div class="profile-avatar" style="width:44px;height:44px;">
-                <img id="profileAvatarMini" alt="Profile avatar">
-              </div>
-              <div>
-                <div id="profileNameMini" style="font-size:14px;font-weight:600;"></div>
-                <div id="profileUsernameMini" class="rc-muted" style="font-size:12px;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SEARCH + FILTERS -->
-        <div class="rc-card">
-          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-            <input id="searchInput" class="rc-field-input" placeholder="Search items…" style="flex:1;min-width:180px;">
-            <select id="disciplineFilter" class="rc-field-input" style="max-width:200px;">
-              <option value="">All Disciplines</option>
-              <option value="dance">Dance</option>
-              <option value="jam">Jam</option>
-              <option value="aggressive">Aggressive</option>
-              <option value="speed">Speed</option>
-              <option value="artistic">Artistic</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- MARKET GRID -->
-        <div class="rc-card">
-          <div id="marketGrid" class="rc-market-grid"></div>
-        </div>
-
-      </section>
-
-    </main>
-
+    <div class="market-filters" id="marketFilterBar" style="margin-top:16px;">
+      <button class="market-chip" data-filter="gear">🛼 Gear</button>
+      <button class="market-chip" data-filter="lesson">📚 Lessons</button>
+      <button class="market-chip" data-filter="session">🔥 Sessions</button>
+      <button class="market-chip" data-filter="event">🎟 Events</button>
+      <button class="market-chip" data-filter="digital">💾 Digital</button>
+      <button class="market-chip" data-filter="spot_based">📍 Spot-based</button>
+    </div>
   </div>
 
-  <script src="rc_core.js"></script>
+  <div class="glass" style="padding:24px;">
+    <div id="marketGrid" class="market-grid"></div>
+  </div>
+</div>
 
-  <script>
-    // -------- SAFETY: FALLBACK MARKETPLACE DATA (if RC.getMarketplaceItems is missing) --------
-    if (typeof RC.getMarketplaceItems !== "function") {
-      RC.getMarketplaceItems = function () {
-        return [
-          {
-            id: RC.uuid(),
-            title: "Beginner Jam Session Pack",
-            discipline: "jam",
-            price: 25,
-            donateToGiveaway: false,
-            imageDataUrl: ""
-          },
-          {
-            id: RC.uuid(),
-            title: "Aggressive Rail Basics",
-            discipline: "aggressive",
-            price: 40,
-            donateToGiveaway: true,
-            imageDataUrl: ""
-          },
-          {
-            id: RC.uuid(),
-            title: "Artistic Flow Routine",
-            discipline: "artistic",
-            price: 30,
-            donateToGiveaway: false,
-            imageDataUrl: ""
-          }
-        ];
-      };
-    }
+<script src="rc_core.js"></script>
+<script src="js/rc_market_core.js"></script>
+<script>
+  document.getElementById("hamburger").onclick = () => {
+    document.getElementById("hamburger").classList.toggle("active");
+    document.getElementById("sidebar").classList.toggle("open");
+  };
 
-    // -------- PROFILE SNAPSHOT --------
-    function renderProfileMini() {
-      const p = RC.getProfile ? RC.getProfile() || {} : {};
-      const nameEl = document.getElementById("profileNameMini");
-      const userEl = document.getElementById("profileUsernameMini");
-      const avatarEl = document.getElementById("profileAvatarMini");
+  document.addEventListener("DOMContentLoaded", () => {
+    const core = window.RC_MARKET_CORE;
+    const els = {
+      grid: document.getElementById("marketGrid"),
+      searchInput: document.getElementById("marketSearchInput"),
+      sortSelect: document.getElementById("marketSortSelect"),
+      filterBar: document.getElementById("marketFilterBar"),
+    };
 
-      nameEl.textContent = p.name || "Unnamed Skater";
-      userEl.textContent = p.username ? "@" + p.username : "@unknown";
+    let activeFilters = new Set();
+    let filtered = [];
 
-      if (p.avatarUrl) {
-        avatarEl.src = p.avatarUrl;
-      } else {
-        avatarEl.src = "https://via.placeholder.com/80x80?text=Skater";
-      }
-    }
+    function applyFilters() {
+      const all = core.getListings();
+      const q = (els.searchInput.value || "").toLowerCase().trim();
+      const sort = els.sortSelect.value;
+      const hasFilters = activeFilters.size > 0;
 
-    // -------- MARKETPLACE RENDER --------
-    function renderMarketplace() {
-      const items = RC.getMarketplaceItems() || [];
-      const grid = document.getElementById("marketGrid");
-      const search = document.getElementById("searchInput").value.toLowerCase();
-      const filter = document.getElementById("disciplineFilter").value;
-
-      const filtered = items.filter(i => {
-        const title = (i.title || "").toLowerCase();
-        const discipline = (i.discipline || "").toLowerCase();
-
+      filtered = all.filter(item => {
         const matchesSearch =
-          title.includes(search) ||
-          discipline.includes(search);
+          !q ||
+          item.title.toLowerCase().includes(q) ||
+          (item.description || "").toLowerCase().includes(q) ||
+          (item.tags || []).some(t => t.toLowerCase().includes(q));
 
-        const matchesFilter = filter ? discipline === filter.toLowerCase() : true;
+        const matchesFilter =
+          !hasFilters ||
+          activeFilters.has(item.category) ||
+          (activeFilters.has("spot_based") && !!item.spotId);
 
         return matchesSearch && matchesFilter;
       });
 
+      filtered.sort((a, b) => {
+        if (sort === "price_low") return (a.price || 0) - (b.price || 0);
+        if (sort === "price_high") return (b.price || 0) - (a.price || 0);
+        if (sort === "newest") return (b.createdAt || 0) - (a.createdAt || 0);
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      });
+
+      render();
+    }
+
+    function render() {
       if (!filtered.length) {
-        grid.innerHTML = "<p class='rc-muted'>No items found. Try adjusting your search or filters.</p>";
+        els.grid.innerHTML = "<p style='opacity:0.7;'>No listings found.</p>";
         return;
       }
 
-      grid.innerHTML = filtered.map(item => `
-        <div class="rc-market-item">
-          <div style="width:100%;height:160px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.06);margin-bottom:10px;">
-            ${item.imageDataUrl ? `<img src="${item.imageDataUrl}" style="width:100%;height:100%;object-fit:cover;">` : ""}
+      els.grid.innerHTML = filtered.map(item => `
+        <div class="market-card" onclick="window.location.href='marketplace-item.html?id=${item.id}'">
+          <div class="market-card-photo">
+            ${renderThumb(item)}
           </div>
-          <div class="rc-market-item-title">${item.title || "Untitled Item"}</div>
-          <div class="rc-muted">${item.discipline || "Unlabeled"}</div>
-          <div class="rc-market-item-price">$${item.price || 0}</div>
-          ${item.donateToGiveaway ? `<div class="rc-chip">Donated to Giveaway</div>` : ""}
-          <button class="rc-btn" style="margin-top:10px;"
-            onclick="location.href='marketplace-item.html?id=${encodeURIComponent(item.id)}'">
-            View Details
-          </button>
+          <div style="margin-top:8px;">
+            <strong>${item.title}</strong><br>
+            <span style="opacity:0.8;font-size:13px;">${item.category}${item.spotName ? " • " + item.spotName : ""}</span>
+            <div style="margin-top:6px;font-weight:600;">${core.formatPrice(item.price, item.currency)}</div>
+          </div>
         </div>
       `).join("");
     }
 
-    // -------- EVENTS --------
-    document.getElementById("searchInput").addEventListener("input", renderMarketplace);
-    document.getElementById("disciplineFilter").addEventListener("change", renderMarketplace);
+    function renderThumb(item) {
+      if (item.photos && item.photos.length) {
+        return `<img src="${item.photos[0]}" alt="" style="width:100%;height:140px;object-fit:cover;border-radius:12px;">`;
+      }
+      return `<div style="width:100%;height:140px;border-radius:12px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:32px;opacity:0.6;">🛼</div>`;
+    }
 
-    // INIT
-    renderProfileMini();
-    renderMarketplace();
-  </script>
+    if (els.filterBar) {
+      els.filterBar.querySelectorAll(".market-chip").forEach(chip => {
+        const key = chip.getAttribute("data-filter");
+        chip.onclick = () => {
+          if (activeFilters.has(key)) {
+            activeFilters.delete(key);
+            chip.classList.remove("active");
+          } else {
+            activeFilters.add(key);
+            chip.classList.add("active");
+          }
+          applyFilters();
+        };
+      });
+    }
+
+    els.searchInput.onkeydown = e => { if (e.key === "Enter") applyFilters(); };
+    els.sortSelect.onchange = applyFilters;
+
+    applyFilters();
+  });
+</script>
 
 </body>
 </html>
