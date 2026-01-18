@@ -1,12 +1,14 @@
 {
-  "name": "rollnconnect",
+  "name": "rollnconnect-backend",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
     "express": "^4.19.0",
-    "ws": "^8.16.0"
+    "pg": "^8.11.3"
   }
 }
