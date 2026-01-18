@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Listing — Roll ’n Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="rc_global.css">
+</head>
+<body>
+
+<div class="stars1"></div><div class="stars2"></div><div class="stars3"></div>
+
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+<div class="sidebar" id="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="marketplace.html">Marketplace</a>
+  <a href="profile.html">Your Profile</a>
+</div>
+
+<div class="wrapper" style="padding:24px;">
+  <div class="glass" style="padding:24px;">
+    <a href="marketplace.html" style="font-size:13px;opacity:0.8;">← Back to marketplace</a>
+    <h1 class="section-title" style="margin-top:8px;">Create Listing</h1>
+
+    <div class="flex-wrap" style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;">
+      <div style="flex:1 1 260px;min-width:260px;">
+        <label class="glass-label">Photos</label>
+        <input type="file" id="photoInput" accept="image/*" multiple class="glass-input">
+        <div id="photoPreview" style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+
+      <div style="flex:2 1 260px;min-width:260px;">
+        <label class="glass-label">Title</label>
+        <input id="titleInput" class="glass-input" placeholder="What are you listing?">
+
+        <label class="glass-label">Price</label>
+        <input id="priceInput" class="glass-input" type="number" min="0" step="1" placeholder="40">
+
+        <label class="glass-label">Category</label>
+        <select id="categoryInput" class="glass-input">
+          <option value="gear">Gear</option>
+          <option value="lesson">Lesson</option>
+          <option value="session">Session</option>
+          <option value="event">Event</option>
+          <option value="digital">Digital</option>
+        </select>
+
+        <label class="glass-label">Description</label>
+        <textarea id="descriptionInput" class="glass-input" rows="4" placeholder="Describe what you're offering…"></textarea>
+
+        <label class="glass-label">Tags (comma separated)</label>
+        <input id="tagsInput" class="glass-input" placeholder="beginner, night, plaza">
+
+        <label class="glass-label">Spot (optional)</label>
+        <input id="spotNameInput" class="glass-input" placeholder="Downtown Plaza">
+        <input id="spotIdInput" class="glass-input" placeholder="SPOT123 (for map linking)">
+
+        <button class="btn-primary" id="btnCreate" style="margin-top:16px;">Publish Listing</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="rc_core.js"></script>
+<script src="js/rc_market_core.js"></script>
+<script>
+  document.getElementById("hamburger").onclick = () => {
+    document.getElementById("hamburger").classList.toggle("active");
+    document.getElementById("sidebar").classList.toggle("open");
+  };
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const core = window.RC_MARKET_CORE;
+    const photoInput = document.getElementById("photoInput");
+    const photoPreview = document.getElementById("photoPreview");
+    const btnCreate = document.getElementById("btnCreate");
+
+    const titleInput = document.getElementById("titleInput");
+    const priceInput = document.getElementById("priceInput");
+    const categoryInput = document.getElementById("categoryInput");
+    const descriptionInput = document.getElementById("descriptionInput");
+    const tagsInput = document.getElementById("tagsInput");
+    const spotNameInput = document.getElementById("spotNameInput");
+    const spotIdInput = document.getElementById("spotIdInput");
+
+    let photos = [];
+
+    photoInput.onchange = async (e) => {
+      const files = Array.from(e.target.files || []);
+      photos = [];
+      photoPreview.innerHTML = "";
+      for (const file of files) {
+        const url = await fileToDataURL(file);
+        photos.push(url);
+        const thumb = document.createElement("div");
+        thumb.style.width = "60px";
+        thumb.style.height = "60px";
+        thumb.style.borderRadius = "10px";
+        thumb.style.overflow = "hidden";
+        thumb.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`;
+        photoPreview.appendChild(thumb);
+      }
+    };
+
+    function fileToDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    btnCreate.onclick = () => {
+      const title = titleInput.value.trim();
+      const price = parseFloat(priceInput.value || "0");
+      const category = categoryInput.value;
+      const description = descriptionInput.value.trim();
+      const tags = (tagsInput.value || "").split(",").map(t => t.trim()).filter(Boolean);
+      const spotName = spotNameInput.value.trim();
+      const spotId = spotIdInput.value.trim();
+
+      if (!title) {
+        alert("Title is required.");
+        return;
+      }
+
+      const listing = core.createListing({
+        title,
+        price: isNaN(price) ? 0 : price,
+        category,
+        description,
+        tags,
+        photos,
+        spotName: spotName || null,
+        spotId: spotId || null,
+      });
+
+      window.location.href = `marketplace-item.html?id=${listing.id}`;
+    };
+  });
+</script>
+
+</body>
+</html>
