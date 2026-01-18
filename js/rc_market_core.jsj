@@ -1,0 +1,195 @@
+// js/rc_market_core.js
+// Roll ’n Connect — Social Marketplace Core (frontend-only)
+
+window.RC_MARKET_CORE = (function () {
+  let listings = [];
+  let users = [];
+  let saved = [];
+  let currentUserId = "user_me"; // mock current user
+
+  function init() {
+    loadMockUsers();
+    loadMockListings();
+    loadSaved();
+  }
+
+  function loadMockUsers() {
+    users = [
+      {
+        id: "user_me",
+        name: "You",
+        city: "Atlanta, GA",
+        bio: "Rolling, mapping, and connecting the city.",
+        avatar: "",
+      },
+      {
+        id: "user1",
+        name: "Skyline Roller Co.",
+        city: "Atlanta, GA",
+        bio: "Night sessions, plaza jams, and curated gear.",
+        avatar: "",
+      },
+      {
+        id: "user2",
+        name: "Plaza Lessons Collective",
+        city: "Atlanta, GA",
+        bio: "Beginner to advanced lessons at iconic spots.",
+        avatar: "",
+      }
+    ];
+  }
+
+  function loadMockListings() {
+    listings = [
+      {
+        id: "item1",
+        title: "Beginner Roll Lesson",
+        price: 40,
+        currency: "USD",
+        category: "lesson",
+        description: "1-hour beginner-friendly lesson to get you rolling with confidence.",
+        tags: ["beginner", "lesson", "one-on-one"],
+        photos: [],
+        sellerId: "user2",
+        spotId: "SPOT123",
+        spotName: "Downtown Plaza",
+        createdAt: Date.now() - 100000,
+      },
+      {
+        id: "item2",
+        title: "Night Session at Skyline Garage",
+        price: 15,
+        currency: "USD",
+        category: "session",
+        description: "Group night session with music, lights, and vibes.",
+        tags: ["session", "group", "night"],
+        photos: [],
+        sellerId: "user1",
+        spotId: "SPOT456",
+        spotName: "Skyline Parking Garage",
+        createdAt: Date.now() - 50000,
+      },
+      {
+        id: "item3",
+        title: "Custom Wheel Set",
+        price: 80,
+        currency: "USD",
+        category: "gear",
+        description: "High-rebound wheels tuned for smooth cruising and dancing.",
+        tags: ["gear", "wheels"],
+        photos: [],
+        sellerId: "user1",
+        createdAt: Date.now() - 200000,
+      }
+    ];
+  }
+
+  function loadSaved() {
+    try {
+      const raw = localStorage.getItem("rc_market_saved");
+      saved = raw ? JSON.parse(raw) : [];
+    } catch {
+      saved = [];
+    }
+  }
+
+  function saveSaved() {
+    localStorage.setItem("rc_market_saved", JSON.stringify(saved));
+  }
+
+  function getListings() {
+    return listings.slice();
+  }
+
+  function getListingById(id) {
+    return listings.find(l => l.id === id) || null;
+  }
+
+  function getListingsBySeller(userId) {
+    return listings.filter(l => l.sellerId === userId);
+  }
+
+  function getUserById(id) {
+    return users.find(u => u.id === id) || null;
+  }
+
+  function getCurrentUser() {
+    return getUserById(currentUserId);
+  }
+
+  function formatPrice(price, currency = "USD") {
+    if (price == null) return "Free";
+    return `${currency === "USD" ? "$" : ""}${price.toFixed(2)}${currency !== "USD" ? " " + currency : ""}`;
+  }
+
+  function getQueryParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+  }
+
+  function isSaved(id) {
+    return saved.includes(id);
+  }
+
+  function toggleSaved(id) {
+    if (isSaved(id)) {
+      saved = saved.filter(x => x !== id);
+    } else {
+      saved.push(id);
+    }
+    saveSaved();
+  }
+
+  function getSavedListings() {
+    return listings.filter(l => saved.includes(l.id));
+  }
+
+  function createListing(data) {
+    const id = "item_" + Date.now();
+    const listing = {
+      id,
+      title: data.title,
+      price: data.price,
+      currency: data.currency || "USD",
+      category: data.category,
+      description: data.description || "",
+      tags: data.tags || [],
+      photos: data.photos || [],
+      sellerId: currentUserId,
+      spotId: data.spotId || null,
+      spotName: data.spotName || null,
+      createdAt: Date.now(),
+    };
+    listings.unshift(listing);
+    return listing;
+  }
+
+  function updateListing(id, data) {
+    const idx = listings.findIndex(l => l.id === id);
+    if (idx === -1) return null;
+    listings[idx] = { ...listings[idx], ...data };
+    return listings[idx];
+  }
+
+  function deleteListing(id) {
+    listings = listings.filter(l => l.id !== id);
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  return {
+    getListings,
+    getListingById,
+    getListingsBySeller,
+    getUserById,
+    getCurrentUser,
+    formatPrice,
+    getQueryParam,
+    isSaved,
+    toggleSaved,
+    getSavedListings,
+    createListing,
+    updateListing,
+    deleteListing,
+  };
+})();
