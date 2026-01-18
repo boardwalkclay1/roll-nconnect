@@ -1,4 +1,6 @@
 // rc_chat_engine.js
+// Roll ’n Connect — Realtime Chat Engine (with basic safety + WS hooks)
+
 (function () {
   const params = new URLSearchParams(window.location.search);
   const discipline = params.get("discipline");
@@ -6,8 +8,8 @@
   const roomType = params.get("type") || "public";
 
   const config = window.RC_CHATROOMS && window.RC_CHATROOMS[discipline];
-  const profile = RC.getProfile ? RC.getProfile() || {} : {};
-  const userId = (RC.getUserId && RC.getUserId()) || ("rc-" + Math.random().toString(36).slice(2));
+  const profile = (window.RC && RC.getProfile) ? (RC.getProfile() || {}) : {};
+  const userId = (window.RC && RC.getUserId) ? RC.getUserId() : ("rc-" + Math.random().toString(36).slice(2));
   const username = profile.username || ("skater_" + userId.slice(-4));
 
   const titleEl = document.getElementById("roomTitle");
@@ -18,23 +20,39 @@
   const emojiBtn = document.getElementById("emojiBtn");
   const voiceBtn = document.getElementById("voiceBtn");
 
-  if (!discipline || !roomId) {
-    titleEl.textContent = "Room not found";
-    metaEl.textContent = "Missing room parameters.";
-    inputEl.disabled = true;
-    sendBtn.disabled = true;
-    voiceBtn.disabled = true;
+  if (!discipline || !roomId || !titleEl || !metaEl || !messagesEl || !inputEl || !sendBtn || !voiceBtn) {
+    if (titleEl) titleEl.textContent = "Room not found";
+    if (metaEl) metaEl.textContent = "Missing room parameters.";
+    if (inputEl) inputEl.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
+    if (voiceBtn) voiceBtn.disabled = true;
     return;
   }
 
+  // ---------------- SAFETY GUARDRAILS (client-side) ----------------
+  function violatesChatRules(text) {
+    if (!text) return true;
+    const t = text.toLowerCase();
+
+    // No racism, hate, or sexual content.
+    const bannedPatterns = [
+      "racist", "nazi", "kkk",
+      "kill all", "go back to",
+      "sex", "sexual", "nudes", "explicit"
+    ];
+
+    return bannedPatterns.some(p => t.includes(p));
+  }
+
+  // ---------------- ROOM LABEL / STORAGE KEY ----------------
   function getRoomLabel() {
     if (!config) return "Unknown room";
     if (roomType === "public") {
-      const r = config.rooms.find(r => r.id === roomId);
+      const r = config.rooms && config.rooms.find(r => r.id === roomId);
       return r ? r.name : "Public room";
     }
     if (roomType === "voice") {
-      const v = config.voice.find(v => v.id === roomId);
+      const v = config.voice && config.voice.find(v => v.id === roomId);
       return v ? v.name : "Voice room";
     }
     if (roomType === "user") {
@@ -62,6 +80,7 @@
     localStorage.setItem(getStorageKey(), JSON.stringify(msgs || []));
   }
 
+  // ---------------- RENDERING ----------------
   function renderMessages() {
     const msgs = loadMessages();
     if (!msgs.length) {
@@ -77,7 +96,7 @@
         <div class="rc-chat-message ${isMe ? "me" : ""}"
              title="Sent by ${m.username} at ${new Date(m.ts).toLocaleString()}">
           <div class="rc-chat-message-header">
-            <span class="rc-chat-profile-hover" onclick="location.href='../../profile.html'">
+            <span class="rc-chat-profile-hover" onclick="location.href='profile.html?id=${encodeURIComponent(m.userId)}'">
               ${m.username}
             </span>
           </div>
@@ -88,24 +107,37 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
+  // ---------------- LOCAL SEND ----------------
+  function appendLocalMessage(msg) {
+    const msgs = loadMessages();
+    msgs.push(msg);
+    saveMessages(msgs);
+    renderMessages();
+  }
+
   function sendMessage() {
     const text = inputEl.value.trim();
     if (!text) return;
-    const msgs = loadMessages();
-    msgs.push({
+    if (violatesChatRules(text)) {
+      alert("That message goes against our community rules.");
+      return;
+    }
+
+    const msg = {
       id: "msg_" + Date.now(),
       userId,
       username,
       text,
       type: "text",
       ts: Date.now()
-    });
-    saveMessages(msgs);
+    };
+
+    appendLocalMessage(msg);
     inputEl.value = "";
-    renderMessages();
-    // TODO: send over WebSocket/WebRTC signaling
+    sendOverSocket(msg);
   }
 
+  // ---------------- VOICE MESSAGES ----------------
   let mediaRecorder = null;
   let chunks = [];
   let isRecording = false;
@@ -140,20 +172,95 @@
   }
 
   function sendVoice(url) {
-    const msgs = loadMessages();
-    msgs.push({
+    const msg = {
       id: "msg_" + Date.now(),
       userId,
       username,
       text: url,
       type: "voice",
       ts: Date.now()
-    });
-    saveMessages(msgs);
-    renderMessages();
-    // TODO: send voice URL/blob reference via signaling
+    };
+    appendLocalMessage(msg);
+    sendOverSocket(msg);
   }
 
+  // ---------------- WEBSOCKET CHAT ----------------
+  let chatSocket = null;
+
+  function connectChatSocket() {
+    const wsUrl = window.RC_CHAT_WS_URL; // e.g. "wss://yourserver.com/chat"
+    if (!wsUrl) return;
+
+    if (chatSocket) {
+      try { chatSocket.close(); } catch {}
+      chatSocket = null;
+    }
+
+    chatSocket = new WebSocket(
+      wsUrl +
+      `?userId=${encodeURIComponent(userId)}` +
+      `&room=${encodeURIComponent(roomId)}` +
+      `&discipline=${encodeURIComponent(discipline)}`
+    );
+
+    chatSocket.onopen = () => {
+      // Optionally send a join event
+      chatSocket.send(JSON.stringify({
+        type: "join",
+        userId,
+        username,
+        roomId,
+        discipline
+      }));
+      if (window.RC && RC.sendPresenceUpdate) {
+        RC.sendPresenceUpdate("in-chat");
+      }
+    };
+
+    chatSocket.onclose = () => {
+      // Auto-reconnect
+      setTimeout(connectChatSocket, 5000);
+    };
+
+    chatSocket.onerror = (err) => {
+      console.error("Chat socket error", err);
+    };
+
+    chatSocket.onmessage = (msg) => {
+      try {
+        const data = JSON.parse(msg.data);
+        if (data.type === "message") {
+          // Append remote message to local history
+          appendRemoteMessage(data.payload);
+        }
+      } catch (e) {
+        console.error("Bad chat WS message", e);
+      }
+    };
+  }
+
+  function sendOverSocket(msg) {
+    if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) return;
+    chatSocket.send(JSON.stringify({
+      type: "message",
+      roomId,
+      discipline,
+      payload: msg
+    }));
+  }
+
+  function appendRemoteMessage(msg) {
+    // Avoid duplicating our own messages if server echoes them
+    if (msg.userId === userId) return;
+    const msgs = loadMessages();
+    // Skip if already present
+    if (msgs.some(m => m.id === msg.id)) return;
+    msgs.push(msg);
+    saveMessages(msgs);
+    renderMessages();
+  }
+
+  // ---------------- INIT HEADER + UI ----------------
   function initHeader() {
     titleEl.textContent = getRoomLabel();
     metaEl.textContent = `${config ? config.name : "Unknown"} • ${roomType === "voice" ? "Live voice" : "Chat room"}`;
@@ -172,4 +279,5 @@
 
   initHeader();
   renderMessages();
+  connectChatSocket();
 })();
