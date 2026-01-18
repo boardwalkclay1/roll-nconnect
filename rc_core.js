@@ -1,5 +1,5 @@
 // rc_core.js
-// Roll ’n Connect — Global App Core (Full Architecture Version B)
+// Roll ’n Connect — Global App Core (with social, notifications, presence)
 
 window.RC = (function () {
 
@@ -21,7 +21,7 @@ window.RC = (function () {
   const API_BASE = "";
 
   async function apiGet(path) {
-    const res = await fetch(API_BASE + path);
+    const res = await fetch(API_BASE + path, { credentials: "include" });
     if (!res.ok) throw new Error("GET " + path + " failed");
     return res.json();
   }
@@ -30,6 +30,7 @@ window.RC = (function () {
     const res = await fetch(API_BASE + path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error("POST " + path + " failed");
@@ -107,7 +108,7 @@ window.RC = (function () {
   }
 
   // ============================================================
-  // 7. SPOT + EVENT HELPERS
+  // 7. SPOT / EVENT / LESSON HELPERS
   // ============================================================
   async function getSpot(id) {
     return apiGet(`/api/spots/${id}`);
@@ -122,7 +123,171 @@ window.RC = (function () {
   }
 
   // ============================================================
-  // 8. UTILITY FUNCTIONS
+  // 8. SOCIAL: FOLLOWERS
+  // ============================================================
+  async function follow(userIdToFollow) {
+    return apiPost("/api/follow", {
+      followerId: getUserId(),
+      followedId: userIdToFollow
+    });
+  }
+
+  async function unfollow(userIdToUnfollow) {
+    return apiPost("/api/unfollow", {
+      followerId: getUserId(),
+      followedId: userIdToUnfollow
+    });
+  }
+
+  async function getFollowers(userId) {
+    return apiGet(`/api/followers/${userId}`);
+  }
+
+  async function getFollowing(userId) {
+    return apiGet(`/api/following/${userId}`);
+  }
+
+  // ============================================================
+  // 9. SOCIAL: COMMENTS (with client guardrails)
+  // ============================================================
+  function violatesClientRules(text) {
+    if (!text) return true;
+    const t = text.toLowerCase();
+
+    // Basic guardrails: no hate, racism, or sexual content.
+    const bannedPatterns = [
+      "racist", "nazi", "kkk",
+      "kill all", "go back to", // you can expand this server-side
+      "sex", "sexual", "nudes", "explicit"
+    ];
+
+    return bannedPatterns.some(p => t.includes(p));
+  }
+
+  async function addComment(targetType, targetId, text) {
+    if (violatesClientRules(text)) {
+      alert("That comment goes against our community rules.");
+      return;
+    }
+
+    return apiPost("/api/comments", {
+      userId: getUserId(),
+      targetType,
+      targetId,
+      text
+    });
+  }
+
+  async function getComments(targetType, targetId) {
+    return apiGet(`/api/comments?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`);
+  }
+
+  // ============================================================
+  // 10. SOCIAL: REACTIONS
+  // ============================================================
+  async function react(targetType, targetId, reactionType) {
+    return apiPost("/api/reactions", {
+      userId: getUserId(),
+      targetType,
+      targetId,
+      reactionType
+    });
+  }
+
+  async function getReactions(targetType, targetId) {
+    return apiGet(`/api/reactions?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`);
+  }
+
+  // ============================================================
+  // 11. NOTIFICATIONS
+  // ============================================================
+  async function getNotifications() {
+    return apiGet("/api/notifications");
+  }
+
+  async function markNotificationRead(id) {
+    return apiPost("/api/notifications/read", { id });
+  }
+
+  // Simple polling hook you can call from notifications page
+  function startNotificationPolling(callback, intervalMs = 15000) {
+    let timer = setInterval(async () => {
+      try {
+        const notifs = await getNotifications();
+        callback(notifs);
+      } catch (e) {
+        console.error("Notification polling failed", e);
+      }
+    }, intervalMs);
+
+    return () => clearInterval(timer);
+  }
+
+  // ============================================================
+  // 12. WEBSOCKET PRESENCE
+  // ============================================================
+  let presenceSocket = null;
+  let presenceHandlers = {
+    onOpen: null,
+    onClose: null,
+    onError: null,
+    onPresenceUpdate: null,
+    onNotification: null
+  };
+
+  function connectPresence(wsUrl) {
+    if (presenceSocket) {
+      try { presenceSocket.close(); } catch {}
+      presenceSocket = null;
+    }
+
+    presenceSocket = new WebSocket(wsUrl + `?userId=${encodeURIComponent(getUserId())}`);
+
+    presenceSocket.onopen = () => {
+      if (presenceHandlers.onOpen) presenceHandlers.onOpen();
+    };
+
+    presenceSocket.onclose = () => {
+      if (presenceHandlers.onClose) presenceHandlers.onClose();
+      // Optional: auto-reconnect
+      setTimeout(() => connectPresence(wsUrl), 5000);
+    };
+
+    presenceSocket.onerror = (err) => {
+      console.error("Presence socket error", err);
+      if (presenceHandlers.onError) presenceHandlers.onError(err);
+    };
+
+    presenceSocket.onmessage = (msg) => {
+      try {
+        const data = JSON.parse(msg.data);
+        if (data.type === "presence" && presenceHandlers.onPresenceUpdate) {
+          presenceHandlers.onPresenceUpdate(data.payload);
+        }
+        if (data.type === "notification" && presenceHandlers.onNotification) {
+          presenceHandlers.onNotification(data.payload);
+        }
+      } catch (e) {
+        console.error("Bad WS message", e);
+      }
+    };
+  }
+
+  function setPresenceHandlers(handlers) {
+    presenceHandlers = { ...presenceHandlers, ...handlers };
+  }
+
+  function sendPresenceUpdate(status) {
+    if (!presenceSocket || presenceSocket.readyState !== WebSocket.OPEN) return;
+    presenceSocket.send(JSON.stringify({
+      type: "presence",
+      userId: getUserId(),
+      status // e.g. "online", "in-session", "offline"
+    }));
+  }
+
+  // ============================================================
+  // 13. UTILITY FUNCTIONS
   // ============================================================
   function distanceKm(lat1, lon1, lat2, lon2) {
     if (!lat1 || !lon1 || !lat2 || !lon2) return null;
@@ -150,22 +315,22 @@ window.RC = (function () {
   }
 
   // ============================================================
-  // 9. DEEP LINK HELPERS
+  // 14. DEEP LINK HELPERS
   // ============================================================
   function openSpotOnMap(spotId) {
-    location.href = `find-spots.html?spot=${spotId}`;
+    location.href = `find-spots.html?spot=${encodeURIComponent(spotId)}`;
   }
 
   function openEventOnMap(eventId) {
-    location.href = `find-spots.html?event=${eventId}`;
+    location.href = `find-spots.html?event=${encodeURIComponent(eventId)}`;
   }
 
   function openProfile(userId) {
-    location.href = `profile.html?id=${userId}`;
+    location.href = `profile.html?id=${encodeURIComponent(userId)}`;
   }
 
   // ============================================================
-  // 10. PUBLIC API
+  // 15. PUBLIC API
   // ============================================================
   return {
     // identity
@@ -196,6 +361,30 @@ window.RC = (function () {
     getSpot,
     getEvent,
     getLesson,
+
+    // followers
+    follow,
+    unfollow,
+    getFollowers,
+    getFollowing,
+
+    // comments
+    addComment,
+    getComments,
+
+    // reactions
+    react,
+    getReactions,
+
+    // notifications
+    getNotifications,
+    markNotificationRead,
+    startNotificationPolling,
+
+    // presence
+    connectPresence,
+    setPresenceHandlers,
+    sendPresenceUpdate,
 
     // utils
     distanceKm,
