@@ -35,21 +35,25 @@
       z-index:1;
     }
 
-    /* Glass Chips */
-    .rc-chip {
-      padding:8px 14px;
-      border-radius:999px;
-      background:rgba(255,255,255,0.12);
+    /* Dropdown Filter */
+    .filter-dropdown {
+      position:absolute;
+      top:20px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:20;
       backdrop-filter:blur(10px);
+    }
+
+    .glass-select {
+      padding:10px 14px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.12);
       border:1px solid rgba(255,255,255,0.25);
       color:#fff;
       font-size:14px;
       cursor:pointer;
-      transition:0.25s ease;
-    }
-    .rc-chip.active {
-      background:rgba(255,255,255,0.25);
-      box-shadow:0 0 12px rgba(255,255,255,0.4);
+      outline:none;
     }
 
     /* Floating Buttons */
@@ -72,8 +76,7 @@
     #btnMyLocation { bottom:160px; }
     #btnNearby { bottom:110px; }
     #btnCheckIn { bottom:60px; }
-    #btnAddSpot { bottom:260px; left:20px; right:auto; }
-    #btnAddTrail { bottom:210px; left:20px; right:auto; }
+    #btnAddSpot { bottom:210px; left:20px; right:auto; }
 
     /* Info Card */
     .info-card {
@@ -121,33 +124,25 @@
   <!-- Map -->
   <div id="map"></div>
 
-  <!-- Floating Glass Filter Chips -->
-  <div id="filterBar" style="
-    position:absolute;
-    top:20px;
-    left:50%;
-    transform:translateX(-50%);
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    z-index:20;
-  ">
-    <button class="rc-chip" data-filter="water">💧 Water</button>
-    <button class="rc-chip" data-filter="food">🍔 Food</button>
-    <button class="rc-chip" data-filter="plaza">🏬 Plazas</button>
-    <button class="rc-chip" data-filter="big_lot">🏪 Big Lots</button>
-    <button class="rc-chip" data-filter="parking_garage">🅿️ Garages</button>
-    <button class="rc-chip" data-filter="hospital">🏥 Hospitals</button>
-    <button class="rc-chip" data-filter="college">🎓 Colleges</button>
-    <button class="rc-chip" data-filter="rink">⛸ Rinks</button>
-    <button class="rc-chip" data-filter="park">🌳 Parks</button>
-    <button class="rc-chip" data-filter="skatepark">🛹 Skateparks</button>
-    <button class="rc-chip" data-filter="trail">🛣️ Trails</button>
+  <!-- Dropdown Filter -->
+  <div class="filter-dropdown">
+    <select id="spotFilterSelect" class="glass-select">
+      <option value="all">All</option>
+      <option value="trail">Trails</option>
+      <option value="plaza">Plazas</option>
+      <option value="garage">Garages</option>
+      <option value="park">Parks</option>
+      <option value="skatepark">Skateparks</option>
+      <option value="rink">Rinks</option>
+      <option value="water">Water</option>
+      <option value="parking">Parking</option>
+      <option value="college">Colleges</option>
+      <option value="hospital">Hospitals</option>
+    </select>
   </div>
 
   <!-- Floating Buttons -->
   <div class="floating-btn" id="btnAddSpot">➕ Add Spot</div>
-  <div class="floating-btn" id="btnAddTrail">🛣️ Add Trail</div>
   <div class="floating-btn" id="btnMyLocation">📍 My Location</div>
   <div class="floating-btn" id="btnNearby">🧭 Nearby Rollers</div>
   <div class="floating-btn" id="btnCheckIn">📌 Check In</div>
@@ -177,7 +172,25 @@
 </div>
 
 <!-- Map Engine -->
-<script src="js/rc_map.js"></script>
+<script src="js/rc_map_core.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const filterSelect = document.getElementById("spotFilterSelect");
+
+    filterSelect.onchange = () => {
+      window.RC_MAP.setFilter(filterSelect.value);
+    };
+
+    document.getElementById("btnMyLocation").onclick = () => {
+      if (!navigator.geolocation) return alert("Location not supported.");
+      navigator.geolocation.getCurrentPosition(pos => {
+        window.RC_MAP.setCenter(pos.coords.latitude, pos.coords.longitude, 13);
+        window.RC_MAP.highlightNearbySpots(pos.coords.latitude, pos.coords.longitude);
+      });
+    };
+  });
+</script>
 
 </body>
 </html>
