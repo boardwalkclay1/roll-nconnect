@@ -1,1 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard — Roll ’n Connect</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <link rel="stylesheet" href="rc_global.css">
+  <style>
+    body {
+      background:#000;
+      color:#fff;
+      margin:0;
+      padding:0;
+      font-family:'Inter',sans-serif;
+      overflow-x:hidden;
+    }
+
+    .stars1, .stars2, .stars3 {
+      position:fixed;
+      width:100%;
+      height:100%;
+      top:0;left:0;
+      pointer-events:none;
+      z-index:-1;
+    }
+
+    .wrapper {
+      padding:24px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    .dashboard-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:16px;
+      margin-top:16px;
+    }
+
+    .metric-card {
+      padding:18px;
+      border-radius:16px;
+      background:rgba(10,10,30,0.9);
+      border:1px solid rgba(255,255,255,0.12);
+      box-shadow:0 0 30px rgba(0,0,0,0.7);
+    }
+
+    .metric-label {
+      font-size:13px;
+      opacity:0.7;
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+    }
+
+    .metric-value {
+      font-size:28px;
+      margin-top:6px;
+      font-weight:600;
+    }
+
+    .metric-sub {
+      font-size:12px;
+      opacity:0.7;
+      margin-top:4px;
+    }
+
+    .section-title-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .pill {
+      padding:6px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.08);
+      font-size:12px;
+      opacity:0.8;
+    }
+
+    .list-card {
+      padding:18px;
+      border-radius:16px;
+      background:rgba(10,10,30,0.9);
+      border:1px solid rgba(255,255,255,0.12);
+      box-shadow:0 0 30px rgba(0,0,0,0.7);
+    }
+
+    .list-item {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:8px 0;
+      border-bottom:1px solid rgba(255,255,255,0.06);
+      font-size:14px;
+    }
+
+    .list-item:last-child {
+      border-bottom:none;
+    }
+
+    .badge {
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:11px;
+      background:rgba(79,195,247,0.15);
+      border:1px solid rgba(79,195,247,0.6);
+    }
+
+    /* Bubble Nav */
+    .bubble-nav {
+      position:fixed;
+      right:20px;
+      top:50%;
+      transform:translateY(-50%);
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      z-index:50;
+    }
+
+    .bubble {
+      width:55px;
+      height:55px;
+      border-radius:50%;
+      background:radial-gradient(circle at 30% 30%, #4fc3f7, #1a237e);
+      box-shadow:0 0 20px rgba(79,195,247,0.7);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:0.25s ease;
+      border:1px solid rgba(255,255,255,0.25);
+      font-size:22px;
+    }
+
+    .bubble:hover {
+      transform:scale(1.15);
+      box-shadow:0 0 30px rgba(79,195,247,1);
+    }
+
+    @media(max-width:768px){
+      .bubble-nav {
+        top:auto;
+        bottom:20px;
+        right:50%;
+        transform:translateX(50%);
+        flex-direction:row;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="stars1"></div>
+div class="stars2"></div>
+<div class="stars3"></div>
+
+<!-- Bubble Nav -->
+<div class="bubble-nav">
+  <div class="bubble" onclick="location.href='index.html'">🏠</div>
+  <div class="bubble" onclick="location.href='map.html'">🗺️</div>
+  <div class="bubble" onclick="location.href='find-spots.html'">📍</div>
+  <div class="bubble" onclick="location.href='events.html'">🎉</div>
+  <div class="bubble" onclick="location.href='chatrooms.html'">💬</div>
+</div>
+
+<!-- Sidebar + Hamburger (reuse your global styles) -->
+<div class="hamburger" id="hamburger">
+  <span></span><span></span><span></span>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="dashboard.html" class="active">Dashboard</a>
+  <a href="map.html">Map</a>
+  <a href="find-spots.html">Find Spots</a>
+  <a href="events.html">Events</a>
+  <a href="marketplace.html">Marketplace</a>
+  <a href="chatrooms.html">Messages</a>
+  <a href="profile.html">Your Profile</a>
+</div>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <div class="glass" style="padding:24px;margin-bottom:16px;">
+    <div class="section-title-row">
+      <div>
+        <h1 class="section-title">Command Deck</h1>
+        <p style="opacity:0.8;">
+          One glance at your world — spots, events, messages, and momentum across the network.
+        </p>
+      </div>
+      <div class="pill">
+        🚀 Launch Mode • v1.0
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="dashboard-grid">
+    <div class="metric-card">
+      <div class="metric-label">Active Spots</div>
+      <div class="metric-value" id="metricSpots">—</div>
+      <div class="metric-sub">Total mapped locations in your universe.</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Upcoming Events</div>
+      <div class="metric-value" id="metricEvents">—</div>
+      <div class="metric-sub">Sessions, meetups, and rollouts on deck.</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Unread Messages</div>
+      <div class="metric-value" id="metricMessages">—</div>
+      <div class="metric-sub">Across all chatrooms and DMs.</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-label">Check-ins Today</div>
+      <div class="metric-value" id="metricCheckins">—</div>
+      <div class="metric-sub">Live presence across your map.</div>
+    </div>
+  </div>
+
+  <!-- Lists -->
+  <div class="dashboard-grid" style="margin-top:24px;">
+    <div class="list-card">
+      <div class="section-title-row">
+        <h2 style="margin:0;">Recent Spots</h2>
+        <span class="pill">📍 Latest additions</span>
+      </div>
+      <div id="recentSpots">
+        <div class="list-item">
+          <span>Loading spots…</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-card">
+      <div class="section-title-row">
+        <h2 style="margin:0;">Upcoming Events</h2>
+        <span class="pill">🎉 This week</span>
+      </div>
+      <div id="upcomingEvents">
+        <div class="list-item">
+          <span>Events coming soon…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Sidebar toggle
+  document.getElementById("hamburger").onclick = () => {
+    document.getElementById("hamburger").classList.toggle("active");
+    document.getElementById("sidebar").classList.toggle("open");
+  };
+
+  // Simple static wiring for now; later this will hit your backend API.
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      // Spots metric from static JSON
+      const spotsRes = await fetch("/api/spots.json");
+      const spots = spotsRes.ok ? await spotsRes.json() : [];
+      document.getElementById("metricSpots").textContent = spots.length || "0";
+
+      const recentSpotsEl = document.getElementById("recentSpots");
+      if (spots.length) {
+        recentSpotsEl.innerHTML = spots.slice(0,5).map(s => `
+          <div class="list-item">
+            <span>${s.name || "Spot"}</span>
+            <span class="badge">${s.city || "Unknown"}</span>
+          </div>
+        `).join("");
+      } else {
+        recentSpotsEl.innerHTML = `
+          <div class="list-item"><span>No spots yet.</span></div>
+        `;
+      }
+
+      // Placeholder metrics until backend is live
+      document.getElementById("metricEvents").textContent = "0";
+      document.getElementById("metricMessages").textContent = "0";
+      document.getElementById("metricCheckins").textContent = "0";
+
+      const upcomingEventsEl = document.getElementById("upcomingEvents");
+      upcomingEventsEl.innerHTML = `
+        <div class="list-item">
+          <span>No events scheduled yet.</span>
+        </div>
+      `;
+    } catch (err) {
+      console.error("Error loading dashboard data", err);
+    }
+  });
+</script>
+
+</body>
+</html>
