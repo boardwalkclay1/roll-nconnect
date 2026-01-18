@@ -77,7 +77,9 @@
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="rc_core.js"></script>
-<script src="js/rc_map_core.js"></script>
+
+<!-- IMPORTANT: unified map engine -->
+<script src="js/rc_map.js"></script>
 
 <script>
   // Sidebar toggle
@@ -92,7 +94,7 @@
     const btnUseLocation = document.getElementById("btnUseLocation");
 
     filterSelect.onchange = () => {
-      window.RC_MAP.setFilter(filterSelect.value);
+      RC_MAP.setFilter(filterSelect.value);
     };
 
     btnUseLocation.onclick = () => {
@@ -103,8 +105,8 @@
       navigator.geolocation.getCurrentPosition(pos => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        window.RC_MAP.setCenter(lat, lng, 13);
-        window.RC_MAP.highlightNearbySpots(lat, lng);
+        RC_MAP.setCenter(lat, lng, 13);
+        RC_MAP.highlightNearbySpots(lat, lng);
       }, () => {
         alert("Unable to get your location.");
       });
