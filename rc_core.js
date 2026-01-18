@@ -1,148 +1,210 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Your Profile — Roll ’n Connect</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="rc_global.css">
-</head>
+// rc_core.js
+// Roll ’n Connect — Global App Core (Full Architecture Version B)
 
-<body>
+window.RC = (function () {
 
-  <!-- OPTIONAL BACKGROUND LAYERS -->
-  <div class="stars1"></div>
-  <div class="stars2"></div>
-  <div class="stars3"></div>
-
-  <div class="rc-app">
-
-    <!-- SIDEBAR -->
-    <aside class="rc-sidebar">
-      <div class="rc-logo">Roll ’n Connect</div>
-
-      <nav class="rc-nav">
-        <button onclick="location.href='dashboard.html'">Dashboard</button>
-        <button onclick="location.href='events.html'">Events</button>
-        <button onclick="location.href='find-spots.html'">Find Spots</button>
-        <button onclick="location.href='chatrooms.html'">Chatrooms</button>
-        <button class="rc-active">Your Profile</button>
-        <button onclick="location.href='profile-edit.html'">Edit Profile</button>
-        <button onclick="location.href='calendar.html'">Calendar</button>
-      </nav>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="rc-content">
-
-      <!-- PROFILE SECTION -->
-      <section class="rc-section rc-active" id="profileSection">
-
-        <!-- PROFILE HEADER -->
-        <div class="rc-card profile-header">
-          <div class="profile-header-inner">
-
-            <div class="profile-avatar">
-              <img id="profileAvatar" alt="Profile avatar">
-            </div>
-
-            <div class="profile-info">
-              <h2 id="profileName"></h2>
-              <div id="profileUsername" class="profile-username"></div>
-              <p id="profileBio" class="profile-bio"></p>
-
-              <div class="profile-actions">
-                <button class="rc-btn" onclick="location.href='profile-edit.html'">Edit Profile</button>
-                <button class="rc-btn-secondary" onclick="location.href='chatrooms.html'">Open Chatrooms</button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- PROFILE META (OPTIONAL STATS) -->
-        <div class="rc-card">
-          <h3>Profile Details</h3>
-          <div id="profileDetails"></div>
-        </div>
-
-        <!-- MINI CALENDAR -->
-        <div class="rc-card">
-          <h3>Upcoming Sessions</h3>
-          <div id="miniCalendar"></div>
-          <button class="rc-btn" style="margin-top:12px;" onclick="location.href='calendar.html'">
-            Open Full Calendar
-          </button>
-        </div>
-
-      </section>
-
-    </main>
-
-  </div>
-
-  <script src="rc_core.js"></script>
-
-  <script>
-    // -------- PROFILE RENDERING --------
-    function renderProfile() {
-      const p = RC.getProfile() || {};
-
-      document.getElementById("profileName").textContent =
-        p.name || "Unnamed Skater";
-
-      document.getElementById("profileUsername").textContent =
-        p.username ? "@" + p.username : "@unknown";
-
-      document.getElementById("profileBio").textContent =
-        p.bio || "No bio added yet.";
-
-      const avatarEl = document.getElementById("profileAvatar");
-      if (p.avatarUrl) {
-        avatarEl.src = p.avatarUrl;
-      } else {
-        avatarEl.src = "https://via.placeholder.com/200x200?text=Skater";
-      }
-
-      const detailsEl = document.getElementById("profileDetails");
-      const city = p.city || "Unknown city";
-      const level = p.level || "Skill level not set";
-      const style = p.style || "Style not set";
-
-      detailsEl.innerHTML = `
-        <p><strong>City:</strong> ${city}</p>
-        <p><strong>Level:</strong> ${level}</p>
-        <p><strong>Style:</strong> ${style}</p>
-      `;
+  // ============================================================
+  // 1. USER IDENTITY
+  // ============================================================
+  function getUserId() {
+    let id = localStorage.getItem("rc_user_id");
+    if (!id) {
+      id = "user-" + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem("rc_user_id", id);
     }
+    return id;
+  }
 
-    // -------- MINI CALENDAR --------
-    function renderMiniCalendar() {
-      const events = RC.getCalendar() || [];
-      const el = document.getElementById("miniCalendar");
+  // ============================================================
+  // 2. GLOBAL API WRAPPER
+  // ============================================================
+  const API_BASE = "";
 
-      if (!events.length) {
-        el.innerHTML = "<p class='rc-muted'>No upcoming sessions.</p>";
-        return;
-      }
+  async function apiGet(path) {
+    const res = await fetch(API_BASE + path);
+    if (!res.ok) throw new Error("GET " + path + " failed");
+    return res.json();
+  }
 
-      const upcoming = events
-        .slice()
-        .sort((a, b) => new Date(a.date) - new Date(b.date))
-        .slice(0, 5);
+  async function apiPost(path, body) {
+    const res = await fetch(API_BASE + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("POST " + path + " failed");
+    return res.json();
+  }
 
-      el.innerHTML = upcoming.map(ev => `
-        <div class="rc-card">
-          <strong>${ev.title || "Untitled Session"}</strong><br>
-          <span class="rc-muted">${ev.date || ""} ${ev.time || ""}</span><br>
-          <span class="rc-muted">${ev.location || ""}</span>
-        </div>
-      `).join("");
+  // ============================================================
+  // 3. LOCAL STORAGE ENGINE
+  // ============================================================
+  function save(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  function load(key, fallback = null) {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return fallback;
     }
+  }
 
-    // INIT
-    renderProfile();
-    renderMiniCalendar();
-  </script>
+  // ============================================================
+  // 4. PROFILE ENGINE
+  // ============================================================
+  function getProfile() {
+    return load("rc_profile", {
+      name: "Unnamed Skater",
+      username: "skater",
+      bio: "",
+      avatarUrl: "",
+      city: "",
+      level: "",
+      style: ""
+    });
+  }
 
-</body>
-</html>
+  function saveProfile(p) {
+    save("rc_profile", p);
+  }
+
+  // ============================================================
+  // 5. CALENDAR ENGINE
+  // ============================================================
+  function getCalendar() {
+    return load("rc_calendar", []);
+  }
+
+  function saveCalendar(events) {
+    save("rc_calendar", events);
+  }
+
+  function addCalendarEvent(ev) {
+    const events = getCalendar();
+    events.push(ev);
+    saveCalendar(events);
+  }
+
+  // ============================================================
+  // 6. ANNOUNCEMENTS ENGINE
+  // ============================================================
+  async function createAnnouncement(text, attachment = null) {
+    const body = {
+      userId: getUserId(),
+      text,
+      ts: Date.now(),
+      ...attachment
+    };
+    return apiPost("/api/announcements", body);
+  }
+
+  async function getAnnouncements() {
+    return apiGet("/api/announcements");
+  }
+
+  // ============================================================
+  // 7. SPOT + EVENT HELPERS
+  // ============================================================
+  async function getSpot(id) {
+    return apiGet(`/api/spots/${id}`);
+  }
+
+  async function getEvent(id) {
+    return apiGet(`/api/events/${id}`);
+  }
+
+  async function getLesson(id) {
+    return apiGet(`/api/lessons/${id}`);
+  }
+
+  // ============================================================
+  // 8. UTILITY FUNCTIONS
+  // ============================================================
+  function distanceKm(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+  }
+
+  function formatDistance(km) {
+    if (km == null) return "";
+    if (km < 1) return `${(km * 1000).toFixed(0)} m`;
+    return `${km.toFixed(1)} km`;
+  }
+
+  function formatDateTime(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    return d.toLocaleString();
+  }
+
+  // ============================================================
+  // 9. DEEP LINK HELPERS
+  // ============================================================
+  function openSpotOnMap(spotId) {
+    location.href = `find-spots.html?spot=${spotId}`;
+  }
+
+  function openEventOnMap(eventId) {
+    location.href = `find-spots.html?event=${eventId}`;
+  }
+
+  function openProfile(userId) {
+    location.href = `profile.html?id=${userId}`;
+  }
+
+  // ============================================================
+  // 10. PUBLIC API
+  // ============================================================
+  return {
+    // identity
+    getUserId,
+
+    // api
+    apiGet,
+    apiPost,
+
+    // storage
+    save,
+    load,
+
+    // profile
+    getProfile,
+    saveProfile,
+
+    // calendar
+    getCalendar,
+    saveCalendar,
+    addCalendarEvent,
+
+    // announcements
+    createAnnouncement,
+    getAnnouncements,
+
+    // spots/events/lessons
+    getSpot,
+    getEvent,
+    getLesson,
+
+    // utils
+    distanceKm,
+    formatDistance,
+    formatDateTime,
+
+    // deep links
+    openSpotOnMap,
+    openEventOnMap,
+    openProfile
+  };
+})();
