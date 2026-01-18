@@ -1,16 +1,22 @@
 // js/rc_map.js
-// Roll ’n Connect – unified map engine
+// Roll ’n Connect – Unified OSM + JSON Map Engine (Final Polished Version)
 
-// Global namespace so pages can talk to the map
 window.RC_MAP = (function () {
   let map;
-  let spots = [];
-  let spotMarkers = {};
-  let trails = [];
-  let trailLayers = {};
-  let activeFilters = new Set(); // category keys
-  let visibleSpotIds = null; // null = all, or array of spotIds
 
+  // Data sources
+  let spots = [];
+  let trails = [];
+
+  // Rendered layers
+  let spotMarkers = {};
+  let trailLayers = {};
+
+  // Filters
+  let activeFilter = "all";
+  let visibleSpotIds = null;
+
+  // Info card references
   const infoCard = {
     el: null,
     name: null,
@@ -23,19 +29,19 @@ window.RC_MAP = (function () {
     currentSpot: null
   };
 
-  // Category → emoji + color
+  // Category metadata
   const CATEGORY_META = {
-    water:        { emoji: "💧", color: "#4FC3F7" },
-    food:         { emoji: "🍔", color: "#FFB74D" },
-    plaza:        { emoji: "🏬", color: "#BA68C8" },
-    big_lot:      { emoji: "🏪", color: "#A1887F" },
+    water:         { emoji: "💧", color: "#4FC3F7" },
+    food:          { emoji: "🍔", color: "#FFB74D" },
+    plaza:         { emoji: "🏬", color: "#BA68C8" },
+    big_lot:       { emoji: "🏪", color: "#A1887F" },
     parking_garage:{ emoji: "🅿️", color: "#90A4AE" },
-    hospital:     { emoji: "🏥", color: "#EF5350" },
-    college:      { emoji: "🎓", color: "#42A5F5" },
-    rink:         { emoji: "⛸", color: "#80CBC4" },
-    park:         { emoji: "🌳", color: "#66BB6A" },
-    skatepark:    { emoji: "🛹", color: "#FF7043" },
-    trail:        { emoji: "🛣️", color: "#FFCA28" }
+    hospital:      { emoji: "🏥", color: "#EF5350" },
+    college:       { emoji: "🎓", color: "#42A5F5" },
+    rink:          { emoji: "⛸", color: "#80CBC4" },
+    park:          { emoji: "🌳", color: "#66BB6A" },
+    skatepark:     { emoji: "🛹", color: "#FF7043" },
+    trail:         { emoji: "🛣️", color: "#FFCA28" }
   };
 
   // Initialize map
@@ -43,29 +49,22 @@ window.RC_MAP = (function () {
     const mapEl = document.getElementById("map");
     if (!mapEl) return;
 
-    map = L.map("map", {
-      zoomControl: true
-    }).setView([33.7488, -84.3880], 12); // Atlanta default
+    map = L.map("map", { zoomControl: true })
+      .setView([33.7488, -84.3880], 12);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap"
     }).addTo(map);
 
-    // Info card wiring
     wireInfoCard();
-
-    // UI buttons
     wireButtons();
-
-    // Filter chips
-    wireFilterChips();
-
-    // Load data
-    loadSpotsAndTrails();
+    wireDropdownFilter();
+    loadData();
   }
 
-  async function loadSpotsAndTrails() {
+  // Load spots + trails
+  async function loadData() {
     try {
       const [spotsRes, trailsRes] = await Promise.all([
         fetch("/api/spots"),
@@ -75,44 +74,41 @@ window.RC_MAP = (function () {
       spots = await spotsRes.json();
       trails = trailsRes.ok ? await trailsRes.json() : [];
 
-      renderSpotsOnMap();
-      renderTrailsOnMap();
+      renderSpots();
+      renderTrails();
     } catch (err) {
-      console.error("Error loading spots/trails", err);
+      console.error("Error loading map data", err);
     }
   }
 
-  function renderSpotsOnMap() {
-    // Clear existing markers
+  // Render spots
+  function renderSpots() {
     Object.values(spotMarkers).forEach(m => map.removeLayer(m));
     spotMarkers = {};
 
     spots.forEach(spot => {
       if (!spot.lat || !spot.lng) return;
 
-      const cat = spot.category || spot.type || "spot";
-      const meta = CATEGORY_META[cat] || { emoji: "📍", color: "#FFFFFF" };
+      const cat = spot.category || "spot";
+      const meta = CATEGORY_META[cat] || { emoji: "📍", color: "#FFF" };
 
-      const marker = L.marker([spot.lat, spot.lng], {
-        title: spot.name
-      }).addTo(map);
+      const marker = L.marker([spot.lat, spot.lng], { title: spot.name })
+        .addTo(map);
 
       marker.bindTooltip(`${meta.emoji} ${spot.name}`, {
-        permanent: false,
         direction: "top"
       });
 
-      marker.on("click", () => {
-        openInfoCard(spot);
-      });
+      marker.on("click", () => openInfoCard(spot));
 
       spotMarkers[spot.spotId] = marker;
     });
 
-    applyFiltersToMap();
+    applyFilters();
   }
 
-  function renderTrailsOnMap() {
+  // Render trails
+  function renderTrails() {
     Object.values(trailLayers).forEach(l => map.removeLayer(l));
     trailLayers = {};
 
@@ -120,10 +116,11 @@ window.RC_MAP = (function () {
       if (!trail.points || !trail.points.length) return;
 
       const latlngs = trail.points.map(p => [p.lat, p.lng]);
+
       const layer = L.polyline(latlngs, {
         color: CATEGORY_META.trail.color,
         weight: 4,
-        opacity: 0.8
+        opacity: 0.85
       }).addTo(map);
 
       layer.on("click", () => {
@@ -136,42 +133,31 @@ window.RC_MAP = (function () {
       trailLayers[trail.trailId] = layer;
     });
 
-    applyFiltersToMap();
+    applyFilters();
   }
 
-  // Filters
-  function wireFilterChips() {
-    const bar = document.getElementById("filterBar");
-    if (!bar) return;
+  // Dropdown filter
+  function wireDropdownFilter() {
+    const select = document.getElementById("spotFilterSelect");
+    if (!select) return;
 
-    const chips = bar.querySelectorAll(".rc-chip");
-    chips.forEach(chip => {
-      const key = chip.getAttribute("data-filter");
-      chip.addEventListener("click", () => {
-        if (activeFilters.has(key)) {
-          activeFilters.delete(key);
-          chip.classList.remove("active");
-        } else {
-          activeFilters.add(key);
-          chip.classList.add("active");
-        }
-        applyFiltersToMap();
-      });
-    });
+    select.onchange = () => {
+      activeFilter = select.value;
+      applyFilters();
+    };
   }
 
-  function applyFiltersToMap() {
-    const hasFilters = activeFilters.size > 0;
+  // Apply filters
+  function applyFilters() {
+    const filter = activeFilter;
 
     // Spots
     Object.entries(spotMarkers).forEach(([spotId, marker]) => {
       const spot = spots.find(s => s.spotId === spotId);
       if (!spot) return;
 
-      const cat = spot.category || spot.type || "spot";
-      const matchesFilter = !hasFilters || activeFilters.has(cat);
-      const matchesVisible =
-        !visibleSpotIds || visibleSpotIds.includes(spot.spotId);
+      const matchesFilter = filter === "all" || spot.category === filter;
+      const matchesVisible = !visibleSpotIds || visibleSpotIds.includes(spot.spotId);
 
       if (matchesFilter && matchesVisible) {
         if (!map.hasLayer(marker)) marker.addTo(map);
@@ -185,8 +171,7 @@ window.RC_MAP = (function () {
       const trail = trails.find(t => t.trailId === trailId);
       if (!trail) return;
 
-      const matchesFilter =
-        !hasFilters || activeFilters.has("trail");
+      const matchesFilter = filter === "all" || filter === "trail";
 
       if (matchesFilter) {
         if (!map.hasLayer(layer)) layer.addTo(map);
@@ -210,83 +195,65 @@ window.RC_MAP = (function () {
     infoCard.btnDirections = document.getElementById("btnDirections");
     infoCard.btnLeaveReview = document.getElementById("btnLeaveReview");
 
-    const closeBtn = document.getElementById("closeInfo");
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        card.style.display = "none";
-        infoCard.currentSpot = null;
-      });
-    }
+    document.getElementById("closeInfo").onclick = () => {
+      card.style.display = "none";
+      infoCard.currentSpot = null;
+    };
 
-    if (infoCard.btnDirections) {
-      infoCard.btnDirections.addEventListener("click", () => {
-        if (!infoCard.currentSpot) return;
-        const { lat, lng } = infoCard.currentSpot;
-        if (!lat || !lng) return;
-        const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-        window.open(url, "_blank");
-      });
-    }
+    infoCard.btnDirections.onclick = () => {
+      if (!infoCard.currentSpot) return;
+      const { lat, lng } = infoCard.currentSpot;
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`);
+    };
 
-    if (infoCard.btnLeaveReview) {
-      infoCard.btnLeaveReview.addEventListener("click", async () => {
-        if (!infoCard.currentSpot) return;
-        const text = prompt("Leave a quick review:");
-        if (!text) return;
-        try {
-          await fetch("/api/reviews/add", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              spotId: infoCard.currentSpot.spotId,
-              text
-            })
-          });
-          loadReviewsForSpot(infoCard.currentSpot.spotId);
-        } catch (err) {
-          console.error("Error leaving review", err);
-        }
+    infoCard.btnLeaveReview.onclick = async () => {
+      if (!infoCard.currentSpot) return;
+      const text = prompt("Leave a quick review:");
+      if (!text) return;
+
+      await fetch("/api/reviews/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          spotId: infoCard.currentSpot.spotId,
+          text
+        })
       });
-    }
+
+      loadReviews(infoCard.currentSpot.spotId);
+    };
   }
 
   async function openInfoCard(spot) {
-    if (!infoCard.el) return;
     infoCard.currentSpot = spot;
 
-    infoCard.name.textContent = spot.name || "Spot";
-    infoCard.type.textContent = `${spot.type || ""} • ${spot.city || ""}`;
+    infoCard.name.textContent = spot.name;
+    infoCard.type.textContent = `${spot.category || ""} • ${spot.city || ""}`;
     infoCard.amenities.textContent = spot.description || "";
 
-    infoCard.people.innerHTML = spot.peopleHere && spot.peopleHere.length
-      ? spot.peopleHere.map(p => `<div>${p.name || "Skater"}</div>`).join("")
+    infoCard.people.innerHTML = spot.peopleHere?.length
+      ? spot.peopleHere.map(p => `<div>${p.name}</div>`).join("")
       : "<span style='opacity:0.7;'>No one checked in right now.</span>";
 
     infoCard.reviews.innerHTML = "<span style='opacity:0.7;'>Loading reviews…</span>";
+
     infoCard.el.style.display = "block";
 
-    await loadReviewsForSpot(spot.spotId);
+    await loadReviews(spot.spotId);
   }
 
-  async function loadReviewsForSpot(spotId) {
-    if (!infoCard.reviews) return;
-    try {
-      const res = await fetch(`/api/reviews?spotId=${encodeURIComponent(spotId)}`);
-      const reviews = res.ok ? await res.json() : [];
-      if (!reviews.length) {
-        infoCard.reviews.innerHTML = "<span style='opacity:0.7;'>No reviews yet.</span>";
-        return;
-      }
-      infoCard.reviews.innerHTML = reviews.map(r => `
+  async function loadReviews(spotId) {
+    const res = await fetch(`/api/reviews?spotId=${spotId}`);
+    const reviews = res.ok ? await res.json() : [];
+
+    infoCard.reviews.innerHTML = reviews.length
+      ? reviews.map(r => `
         <div style="margin-bottom:8px;">
           <strong>${r.author || "Skater"}</strong><br>
           <span style="opacity:0.8;">${r.text}</span>
         </div>
-      `).join("");
-    } catch (err) {
-      console.error("Error loading reviews", err);
-      infoCard.reviews.innerHTML = "<span style='opacity:0.7;'>Error loading reviews.</span>";
-    }
+      `).join("")
+      : "<span style='opacity:0.7;'>No reviews yet.</span>";
   }
 
   // Buttons
@@ -295,153 +262,80 @@ window.RC_MAP = (function () {
     const btnNearby = document.getElementById("btnNearby");
     const btnCheckIn = document.getElementById("btnCheckIn");
     const btnAddSpot = document.getElementById("btnAddSpot");
-    const btnAddTrail = document.getElementById("btnAddTrail");
 
-    if (btnMyLocation) {
-      btnMyLocation.addEventListener("click", () => {
-        if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition(pos => {
-          const { latitude, longitude } = pos.coords;
-          map.setView([latitude, longitude], 15);
+    btnMyLocation.onclick = () => {
+      navigator.geolocation.getCurrentPosition(pos => {
+        map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+      });
+    };
+
+    btnNearby.onclick = () => {
+      alert("Nearby rollers will highlight active users soon.");
+    };
+
+    btnCheckIn.onclick = async () => {
+      navigator.geolocation.getCurrentPosition(async pos => {
+        await fetch("/api/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          })
         });
+        alert("Checked in!");
       });
-    }
+    };
 
-    if (btnNearby) {
-      btnNearby.addEventListener("click", () => {
-        alert("Nearby rollers feature would highlight active users on the map.");
-      });
-    }
-
-    if (btnCheckIn) {
-      btnCheckIn.addEventListener("click", async () => {
-        if (!navigator.geolocation) return;
-        navigator.geolocation.getCurrentPosition(async pos => {
-          const { latitude, longitude } = pos.coords;
-          try {
-            await fetch("/api/checkin", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ lat: latitude, lng: longitude })
-            });
-            alert("Checked in!");
-          } catch (err) {
-            console.error("Error checking in", err);
-          }
-        });
-      });
-    }
-
-    if (btnAddSpot) {
-      btnAddSpot.addEventListener("click", () => {
-        startAddSpotFlow();
-      });
-    }
-
-    if (btnAddTrail) {
-      btnAddTrail.addEventListener("click", () => {
-        startAddTrailFlow();
-      });
-    }
+    btnAddSpot.onclick = () => startAddSpotFlow();
   }
 
+  // Add spot flow
   function startAddSpotFlow() {
     alert("Click on the map to place a new spot.");
+
     const clickHandler = async (e) => {
       map.off("click", clickHandler);
+
       const name = prompt("Spot name:");
       if (!name) return;
-      const type = prompt("Category (water, food, plaza, big_lot, parking_garage, hospital, college, rink, park, skatepark):", "skatepark");
+
+      const category = prompt("Category:", "skatepark");
       const description = prompt("Short description:");
 
-      try {
-        const res = await fetch("/api/spots/add", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            category: type,
-            description,
-            lat: e.latlng.lat,
-            lng: e.latlng.lng
-          })
-        });
-        const newSpot = await res.json();
-        spots.push(newSpot);
-        renderSpotsOnMap();
-      } catch (err) {
-        console.error("Error adding spot", err);
-      }
-    };
-    map.on("click", clickHandler);
-  }
+      const res = await fetch("/api/spots/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          category,
+          description,
+          lat: e.latlng.lat,
+          lng: e.latlng.lng
+        })
+      });
 
-  function startAddTrailFlow() {
-    alert("Click multiple points on the map to draw a trail. Double-click to finish.");
-    let points = [];
-    let tempLine = null;
-
-    const clickHandler = (e) => {
-      points.push([e.latlng.lat, e.latlng.lng]);
-      if (tempLine) {
-        tempLine.setLatLngs(points);
-      } else {
-        tempLine = L.polyline(points, {
-          color: CATEGORY_META.trail.color,
-          weight: 4,
-          opacity: 0.8,
-          dashArray: "5,5"
-        }).addTo(map);
-      }
-    };
-
-    const dblClickHandler = async () => {
-      map.off("click", clickHandler);
-      map.off("dblclick", dblClickHandler);
-      if (tempLine) {
-        map.removeLayer(tempLine);
-      }
-      if (points.length < 2) return;
-
-      const name = prompt("Trail name:");
-      if (!name) return;
-
-      try {
-        const res = await fetch("/api/trails/add", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            points: points.map(p => ({ lat: p[0], lng: p[1] }))
-          })
-        });
-        const newTrail = await res.json();
-        trails.push(newTrail);
-        renderTrailsOnMap();
-      } catch (err) {
-        console.error("Error adding trail", err);
-      }
+      const newSpot = await res.json();
+      spots.push(newSpot);
+      renderSpots();
     };
 
     map.on("click", clickHandler);
-    map.on("dblclick", dblClickHandler);
   }
 
-  // Public API for pages
-
+  // Public API
   function focusSpot(spotId) {
     const spot = spots.find(s => s.spotId === spotId);
-    if (!spot || !spot.lat || !spot.lng) return;
+    if (!spot) return;
     map.setView([spot.lat, spot.lng], 16);
     openInfoCard(spot);
   }
 
-  function setVisibleSpots(spotIds) {
-    visibleSpotIds = Array.isArray(spotIds) ? spotIds : null;
-    applyFiltersToMap();
+  function setVisibleSpots(ids) {
+    visibleSpotIds = Array.isArray(ids) ? ids : null;
+    applyFilters();
   }
 
-  // Auto-init when DOM is ready
   document.addEventListener("DOMContentLoaded", initMap);
 
   return {
