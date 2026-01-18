@@ -4,150 +4,49 @@
   <meta charset="UTF-8">
   <title>Events — Roll ’n Connect</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="rc_style.css">
+  <link rel="stylesheet" href="rc_global.css">
 </head>
-
 <body>
 
-  <!-- STARFIELD -->
-  <div class="stars1"></div>
-  <div class="stars2"></div>
-  <div class="stars3"></div>
+<div class="stars1"></div><div class="stars2"></div><div class="stars3"></div>
 
-  <!-- LOADING -->
-  <div class="rc-loading-overlay" id="loadingScreen">
-    <div class="rc-loading-track">
-      <div class="rc-longboard"></div>
-      <div class="rc-rollerskate"></div>
-    </div>
-    <div class="rc-loading-text">Loading Events…</div>
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+<div class="sidebar" id="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="find-spots.html">Find Spots</a>
+  <a href="events.html">Events</a>
+  <a href="marketplace.html">Marketplace</a>
+  <a href="chatrooms.html">Messages</a>
+  <a href="profile.html">Your Profile</a>
+</div>
+
+<div class="wrapper" style="padding:24px;">
+  <div class="glass" style="padding:24px;margin-bottom:16px;">
+    <h1 class="section-title">Events</h1>
+    <p style="opacity:0.8;">Skate events first, then everything else happening around you.</p>
   </div>
 
-  <!-- HAMBURGER -->
-  <div class="hamburger" id="hamburger">
-    <span></span><span></span><span></span>
+  <div class="glass" style="padding:24px;margin-bottom:16px;">
+    <h2 class="section-title">Skate Events Near You</h2>
+    <div id="skateEventsList" style="margin-top:12px;"></div>
   </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <h2>Menu</h2>
-    <a href="index.html">Home</a>
-    <a href="dashboard.html">Dashboard</a>
-    <a href="notifications.html">Notifications</a>
-    <a href="events.html">Events</a>
-    <a href="find-spots.html">Find Spots</a>
-    <a href="chatrooms.html">Chatrooms</a>
-    <a href="profile.html">Your Profile</a>
-    <a href="profile-edit.html">Edit Profile</a>
+  <div class="glass" style="padding:24px;">
+    <h2 class="section-title">Other Events Near You</h2>
+    <div id="publicEventsList" style="margin-top:12px;"></div>
   </div>
+</div>
 
-  <!-- MAIN -->
-  <div class="wrapper">
-
-    <div class="glass" style="padding:40px;margin-bottom:40px;">
-      <h1 class="section-title">Events Near You</h1>
-
-      <!-- SEARCH BAR -->
-      <div class="flex-between flex-wrap gap-md" style="margin-bottom:20px;">
-        <input id="keywordInput" class="glass-input" placeholder="Search events…">
-        <input id="locationInput" class="glass-input" placeholder="City or ZIP">
-        <input id="radiusInput" class="glass-input" type="number" min="1" max="200" value="25" style="max-width:120px;" placeholder="Miles">
-        <button class="btn-primary" id="searchBtn">Search</button>
-      </div>
-
-      <div id="eventsList"></div>
-    </div>
-
-  </div>
-
-  <script src="rc_core.js"></script>
-
-  <script>
-    /* LOADING */
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        const ls = document.getElementById("loadingScreen");
-        ls.style.opacity = "0";
-        setTimeout(() => ls.remove(), 600);
-      }, 600);
-    });
-
-    /* SIDEBAR */
-    document.getElementById("hamburger").onclick = () => {
-      document.getElementById("hamburger").classList.toggle("active");
-      document.getElementById("sidebar").classList.toggle("open");
-    };
-
-    /* REAL API FETCH (placeholder) */
-    async function fetchEvents(keyword, location, radius) {
-      // Placeholder for real API integration
-      // This structure is ready for Ticketmaster/Eventbrite/etc.
-      return [
-        {
-          title: "Skate Jam Downtown",
-          date: "2026-02-12",
-          time: "7:00 PM",
-          location: "Downtown Plaza",
-          link: "#"
-        },
-        {
-          title: "Roller Disco Night",
-          date: "2026-02-15",
-          time: "9:00 PM",
-          location: "Galaxy Rink",
-          link: "#"
-        }
-      ];
-    }
-
-    /* RENDER EVENTS */
-    async function renderEvents() {
-      const keyword = document.getElementById("keywordInput").value.trim();
-      const location = document.getElementById("locationInput").value.trim();
-      const radius = document.getElementById("radiusInput").value.trim();
-
-      const events = await fetchEvents(keyword, location, radius);
-      const el = document.getElementById("eventsList");
-
-      if (!events.length) {
-        el.innerHTML = "<p style='opacity:0.7;'>No events found.</p>";
-        return;
-      }
-
-      el.innerHTML = events.map(ev => `
-        <div class="glass-card" style="margin-bottom:20px;">
-          <strong>${ev.title}</strong><br>
-          <span style="opacity:0.8;">${ev.date} • ${ev.time}</span><br>
-          <span style="opacity:0.8;">${ev.location}</span><br>
-          <a href="${ev.link}" class="btn-primary" style="margin-top:10px;display:inline-block;">Details</a>
-          <button class="btn-ghost" style="margin-top:10px;" onclick="addToCalendar('${ev.title}','${ev.date}','${ev.time}','${ev.location}')">
-            Add to Calendar
-          </button>
-        </div>
-      `).join("");
-    }
-
-    function addToCalendar(title, date, time, location) {
-      const items = RC.getCalendarItems();
-      items.push({
-        id: "cal_" + Date.now(),
-        ownerId: RC.getUserId(),
-        type: "event",
-        title,
-        date,
-        time,
-        location,
-        privacy: "public",
-        groups: []
-      });
-      RC.saveCalendarItems(items);
-      alert("Added to your calendar.");
-    }
-
-    document.getElementById("searchBtn").onclick = renderEvents;
-
-    renderEvents();
-  </script>
+<script src="rc_core.js"></script>
+<script src="js/rc_map_core.js"></script>
+<script src="js/rc_events_core.js"></script>
+<script>
+  document.getElementById("hamburger").onclick = () => {
+    document.getElementById("hamburger").classList.toggle("active");
+    document.getElementById("sidebar").classList.toggle("open");
+  };
+</script>
 
 </body>
 </html>
